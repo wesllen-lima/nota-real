@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { Cell, Pie, PieChart, Tooltip as RechartsTooltip } from "recharts";
 import type { TaxBreakdown, TaxCalculationResult } from "@/types/tax";
 
-// Paleta por nivel de governo (sistema legado)
+// Paleta por nivel de governo — gradiente do mais vivo para 60%
 const LEGACY_PALETTE: Record<string, string[]> = {
   federal: ["#3B82F6", "#60A5FA", "#93C5FD"],
   estadual: ["#EF4444", "#F87171"],
   municipal: ["#F59E0B", "#FBBF24"],
 };
 
-// Paleta exclusiva para IVA teste (teal — visualmente distinto)
+// IVA teste: citizen-teal com glow
 const IVA_COLORS = ["#14B8A6", "#2DD4BF"];
 
 const BRL = (v: number) =>
@@ -21,8 +21,10 @@ interface ChartSlice {
   name: string;
   value: number;
   color: string;
+  gradientId: string;
   description: string;
   layer: string;
+  isIva: boolean;
 }
 
 function getSliceColor(
@@ -34,7 +36,8 @@ function getSliceColor(
     colorIndexes["iva"] = idx + 1;
     return IVA_COLORS[idx];
   }
-  const palette = LEGACY_PALETTE[b.governmentLevel] ?? LEGACY_PALETTE["federal"];
+  const palette =
+    LEGACY_PALETTE[b.governmentLevel] ?? LEGACY_PALETTE["federal"];
   const key = `legacy_${b.governmentLevel}`;
   const idx = (colorIndexes[key] ?? 0) % palette.length;
   colorIndexes[key] = idx + 1;
@@ -67,7 +70,10 @@ function CustomTooltip({
         />
         <p className="text-xs font-semibold text-white/80">{s.name}</p>
       </div>
-      <p className="mt-1 font-mono text-sm font-bold" style={{ color: s.color }}>
+      <p
+        className="mt-1 font-mono text-sm font-bold"
+        style={{ color: s.color }}
+      >
         {BRL(s.value)}
       </p>
       <p className="mt-1.5 text-[11px] leading-snug text-white/40">
@@ -90,24 +96,38 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
   const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 
   const colorIndexes: Record<string, number> = {};
-  const taxSlices: ChartSlice[] = result.breakdown.map((b) => ({
-    name: b.code,
-    value: b.amountPaid,
-    color: getSliceColor(b, colorIndexes),
-    description: b.glossary.citizenDescription,
-    layer: b.layer,
-  }));
+  let gradientCounter = 0;
 
+  const taxSlices: ChartSlice[] = result.breakdown.map((b) => {
+    const color = getSliceColor(b, colorIndexes);
+    const gradientId = `grad-${gradientCounter++}`;
+    return {
+      name: b.code,
+      value: b.amountPaid,
+      color,
+      gradientId,
+      description: b.glossary.citizenDescription,
+      layer: b.layer,
+      isIva: b.layer === "iva_teste",
+    };
+  });
+
+  const netGradientId = `grad-net`;
   const chartData: ChartSlice[] = [
     ...taxSlices,
     {
       name: "Valor Real",
       value: result.netPrice,
       color: "#10B981",
+      gradientId: netGradientId,
       description: "O preco real do produto, sem nenhum imposto embutido.",
       layer: "real",
+      isIva: false,
     },
   ];
+
+  // Fatias IVA para a camada de glow (renderizadas sob o donut principal)
+  const ivaGlowData = chartData.filter((s) => s.isIva);
 
   if (!mounted) {
     return <div className="skeleton h-[240px] w-[240px] rounded-full" />;
@@ -120,6 +140,67 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
       {/* Donut */}
       <div className="relative flex items-center justify-center">
         <PieChart width={260} height={260}>
+          {/* ---- Definicoes SVG: gradientes + filtros ---- */}
+          <defs>
+            {/* Gradiente radial para cada fatia: inner=cor plena, outer=cor 55% */}
+            {chartData.map((s) => (
+              <radialGradient
+                key={s.gradientId}
+                id={s.gradientId}
+                cx="50%"
+                cy="50%"
+                r="50%"
+                gradientUnits="objectBoundingBox"
+              >
+                <stop offset="0%" stopColor={s.color} stopOpacity={0.95} />
+                <stop offset="100%" stopColor={s.color} stopOpacity={0.65} />
+              </radialGradient>
+            ))}
+
+            {/* Filtro de glow suave para fatias IVA */}
+            <filter id="glow-iva" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow verde para fatia "Valor Real" */}
+            <filter id="glow-net" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Camada de glow IVA — renderizada abaixo, mais larga e blurred */}
+          {ivaGlowData.length > 0 && (
+            <Pie
+              data={chartData}
+              dataKey="value"
+              innerRadius={72}
+              outerRadius={120}
+              startAngle={90}
+              endAngle={450}
+              paddingAngle={1.5}
+              strokeWidth={0}
+              isAnimationActive={false}
+              style={{ filter: "url(#glow-iva)", pointerEvents: "none" }}
+            >
+              {chartData.map((slice, i) => (
+                <Cell
+                  key={`glow-${i}`}
+                  fill={slice.isIva ? "#14B8A6" : "transparent"}
+                  opacity={slice.isIva ? 0.35 : 0}
+                />
+              ))}
+            </Pie>
+          )}
+
+          {/* Donut principal com gradientes */}
           <Pie
             data={chartData}
             dataKey="value"
@@ -131,13 +212,18 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
             strokeWidth={0}
           >
             {chartData.map((slice, i) => (
-              <Cell key={i} fill={slice.color} opacity={0.9} />
+              <Cell
+                key={`cell-${i}`}
+                fill={`url(#${slice.gradientId})`}
+                opacity={0.92}
+              />
             ))}
           </Pie>
+
           <RechartsTooltip content={<CustomTooltip />} cursor={false} />
         </PieChart>
 
-        {/* Centro */}
+        {/* Centro do donut */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
           <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-white/25">
             Valor Real
@@ -155,17 +241,35 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
       {hasIva && (
         <div className="flex items-center gap-4 px-4">
           <div className="flex items-center gap-1.5">
-            <span className="h-[5px] w-5 rounded-full" style={{ background: "#EF4444", opacity: 0.7 }} />
+            <span
+              className="h-[5px] w-5 rounded-full"
+              style={{ background: "#EF4444", opacity: 0.7 }}
+            />
             <span className="text-[10px] text-white/30">Legado</span>
           </div>
           <div className="h-3 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <span className="h-[5px] w-5 rounded-full" style={{ background: "#14B8A6", opacity: 0.7 }} />
+            {/* Indicador teal com glow CSS para o IVA */}
+            <span
+              className="h-[5px] w-5 rounded-full"
+              style={{
+                background: "#14B8A6",
+                opacity: 0.85,
+                boxShadow: "0 0 6px #14B8A660",
+              }}
+            />
             <span className="text-[10px] text-white/30">IVA Teste</span>
           </div>
           <div className="h-3 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <span className="h-[5px] w-5 rounded-full" style={{ background: "#10B981", opacity: 0.7 }} />
+            <span
+              className="h-[5px] w-5 rounded-full"
+              style={{
+                background: "#10B981",
+                opacity: 0.85,
+                boxShadow: "0 0 6px #10B98150",
+              }}
+            />
             <span className="text-[10px] text-white/30">Real</span>
           </div>
         </div>

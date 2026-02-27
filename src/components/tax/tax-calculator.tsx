@@ -1,15 +1,19 @@
 "use client";
 
+import { useState } from "react";
+import { Calculator, ScanLine } from "lucide-react";
+import { clsx } from "clsx";
 import { useTaxCalculator } from "@/hooks/use-tax-calculator";
 import { useEstados } from "@/hooks/use-estados";
 import { InputPanel } from "./input-panel";
 import { PriceDisplay } from "./price-display";
 import { BreakdownChart } from "./breakdown-chart";
 import { BreakdownList } from "./breakdown-list";
+import { NfeScanner } from "./nfe-scanner";
+import { LaborEffortCard } from "./labor-effort-card";
 
 // ============================================================
 // Skeleton UI — Progressive Disclosure
-// Mostra a estrutura do que vira antes do usuario interagir
 // ============================================================
 function CalculatorSkeleton() {
   return (
@@ -21,42 +25,45 @@ function CalculatorSkeleton() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Price skeleton */}
         <div className="card-glass flex flex-col gap-5 rounded-2xl p-5">
-          {/* Card principal */}
           <div className="flex flex-col gap-2">
             <div className="skeleton h-[10px] w-20 rounded" />
-            <div className="skeleton h-10 w-44 rounded-lg" style={{ animationDelay: "0.1s" }} />
+            <div
+              className="skeleton h-10 w-44 rounded-lg"
+              style={{ animationDelay: "0.1s" }}
+            />
             <div className="skeleton-dim h-[9px] w-36 rounded" />
           </div>
-          {/* Divider */}
           <div className="h-px bg-white/[0.04]" />
-          {/* Card secundario 1 */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1.5">
               <div className="skeleton h-[9px] w-16 rounded" />
-              <div className="skeleton h-8 w-32 rounded-lg" style={{ animationDelay: "0.2s" }} />
+              <div
+                className="skeleton h-8 w-32 rounded-lg"
+                style={{ animationDelay: "0.2s" }}
+              />
             </div>
             <div className="skeleton-dim h-6 w-10 rounded-lg" />
           </div>
-          {/* Card secundario 2 */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1.5">
               <div className="skeleton h-[9px] w-24 rounded" />
-              <div className="skeleton h-8 w-28 rounded-lg" style={{ animationDelay: "0.3s" }} />
+              <div
+                className="skeleton h-8 w-28 rounded-lg"
+                style={{ animationDelay: "0.3s" }}
+              />
             </div>
             <div className="skeleton-dim h-6 w-12 rounded-lg" />
           </div>
         </div>
 
-        {/* Chart skeleton — anel donut sugerindo o grafico */}
+        {/* Chart skeleton */}
         <div className="card-glass flex flex-col items-center justify-center gap-4 rounded-2xl py-8">
           <div className="relative h-[200px] w-[200px]">
-            {/* Anel externo — sugere os segmentos de imposto */}
             <svg
               viewBox="0 0 200 200"
               className="h-full w-full"
               style={{ animation: "skeleton-breathe 2.8s ease-in-out infinite" }}
             >
-              {/* Segmento maior (sugere "valor real" / citizen-green) */}
               <circle
                 cx="100"
                 cy="100"
@@ -69,7 +76,6 @@ function CalculatorSkeleton() {
                 strokeLinecap="round"
                 opacity="0.08"
               />
-              {/* Segmentos menores (sugerem impostos) */}
               <circle
                 cx="100"
                 cy="100"
@@ -95,11 +101,12 @@ function CalculatorSkeleton() {
                 opacity="0.06"
               />
             </svg>
-
-            {/* Centro do donut */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
               <div className="skeleton h-[9px] w-14 rounded" />
-              <div className="skeleton h-6 w-24 rounded-lg" style={{ animationDelay: "0.15s" }} />
+              <div
+                className="skeleton h-6 w-24 rounded-lg"
+                style={{ animationDelay: "0.15s" }}
+              />
               <div className="skeleton-dim h-[9px] w-16 rounded" />
             </div>
           </div>
@@ -118,12 +125,21 @@ function CalculatorSkeleton() {
             <div key={i} className={i === 0 ? "pb-4" : "py-4"}>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="skeleton h-5 w-14 rounded-md" style={{ animationDelay: `${i * 0.1}s` }} />
-                  <div className="skeleton-dim h-[9px] rounded" style={{ width: `${label}px` }} />
+                  <div
+                    className="skeleton h-5 w-14 rounded-md"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  />
+                  <div
+                    className="skeleton-dim h-[9px] rounded"
+                    style={{ width: `${label}px` }}
+                  />
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="skeleton-dim h-[9px] w-8 rounded" />
-                  <div className="skeleton h-[11px] w-20 rounded" style={{ animationDelay: `${i * 0.12}s` }} />
+                  <div
+                    className="skeleton h-[11px] w-20 rounded"
+                    style={{ animationDelay: `${i * 0.12}s` }}
+                  />
                 </div>
               </div>
               <div className="mt-2.5 h-[2px] w-full overflow-hidden rounded-full bg-white/[0.04]">
@@ -137,7 +153,6 @@ function CalculatorSkeleton() {
         </div>
       </div>
 
-      {/* Hint */}
       <p className="text-center text-[11px] text-white/20">
         Digite um valor acima para revelar a analise tributaria completa
       </p>
@@ -146,9 +161,21 @@ function CalculatorSkeleton() {
 }
 
 // ============================================================
+// Tabs de modo
+// ============================================================
+type AppMode = "calculadora" | "scanner";
+
+const TABS: Array<{ id: AppMode; label: string; Icon: typeof Calculator }> = [
+  { id: "calculadora", label: "Calculadora", Icon: Calculator },
+  { id: "scanner", label: "Raio-X NF-e", Icon: ScanLine },
+];
+
+// ============================================================
 // Componente principal
 // ============================================================
 export function TaxCalculator() {
+  const [mode, setMode] = useState<AppMode>("calculadora");
+
   const {
     inputs,
     grossPrice,
@@ -165,34 +192,64 @@ export function TaxCalculator() {
 
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
-      <InputPanel
-        inputs={inputs}
-        estados={estados}
-        isLoadingEstados={isLoadingEstados}
-        isDetectingLocation={isDetectingLocation}
-        onGrossPriceChange={setGrossPriceRaw}
-        onCategoryChange={setProductCategory}
-        onUfChange={setUf}
-        onRegimeChange={setRegime}
-      />
+      {/* Tabs de modo */}
+      <div className="flex gap-2 self-start">
+        {TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setMode(id)}
+            className={clsx(
+              "flex items-center gap-2 rounded-xl px-4 py-2 text-[12px] font-medium transition-all duration-150",
+              mode === id
+                ? "border border-gov-blue/30 bg-gov-blue/10 text-gov-blue"
+                : "border border-white/6 bg-white/3 text-white/35 hover:bg-white/6 hover:text-white/55"
+            )}
+          >
+            <Icon size={13} />
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {isValid && result ? (
+      {/* Modo: Calculadora manual */}
+      {mode === "calculadora" && (
         <>
-          <div className="grid gap-6 md:grid-cols-2">
-            <PriceDisplay result={result} />
-            <div className="card-glass flex items-center justify-center rounded-2xl py-6">
-              <BreakdownChart result={result} />
-            </div>
-          </div>
-          <BreakdownList
-            breakdown={result.breakdown}
-            grossPrice={grossPrice!}
-            isHybrid={result.isHybrid}
+          <InputPanel
+            inputs={inputs}
+            estados={estados}
+            isLoadingEstados={isLoadingEstados}
+            isDetectingLocation={isDetectingLocation}
+            onGrossPriceChange={setGrossPriceRaw}
+            onCategoryChange={setProductCategory}
+            onUfChange={setUf}
+            onRegimeChange={setRegime}
           />
+
+          {isValid && result ? (
+            <>
+              <div className="grid gap-6 md:grid-cols-2">
+                <PriceDisplay result={result} />
+                <div className="card-glass flex items-center justify-center rounded-2xl py-6">
+                  <BreakdownChart result={result} />
+                </div>
+              </div>
+              <BreakdownList
+                breakdown={result.breakdown}
+                grossPrice={grossPrice!}
+                isHybrid={result.isHybrid}
+              />
+              {/* Labor Effort — visivel quando ha resultado calculado */}
+              <LaborEffortCard totalTaxAmount={result.totalTaxAmount} />
+            </>
+          ) : (
+            <CalculatorSkeleton />
+          )}
         </>
-      ) : (
-        <CalculatorSkeleton />
       )}
+
+      {/* Modo: Scanner NF-e */}
+      {mode === "scanner" && <NfeScanner />}
     </div>
   );
 }
