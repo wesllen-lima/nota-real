@@ -1,64 +1,84 @@
-import Image from "next/image";
+import { TaxCalculator } from "@/components/tax/tax-calculator";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="relative min-h-screen bg-background">
+      {/* Ambient light — spots ultra-suaves nos cantos */}
+      <div className="ambient-top-right pointer-events-none fixed inset-0 z-0" />
+      <div className="ambient-bottom-left pointer-events-none fixed inset-0 z-0" />
+
+      {/* Noise texture — 2.5% opacity, cobre toda a tela */}
+      <div className="noise pointer-events-none fixed inset-0 z-10 opacity-[0.025]" />
+
+      <main className="relative z-20 flex min-h-screen flex-col items-center px-4 py-14 sm:px-6 lg:px-8">
+        {/* Header */}
+        <header className="mb-14 flex flex-col items-center gap-5 text-center">
+          {/* Chip de contexto */}
+          <div className="chip-glass rounded-full px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
+            Transparencia Fiscal — Brasil 2026
+          </div>
+
+          {/* Logo */}
+          <div className="flex flex-col items-center gap-1.5">
+            <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #d4d4d8 0%, #ffffff 50%, #e4e4e7 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Nota
+              </span>
+              {" "}
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #a1a1aa 0%, #ffffff 60%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Real
+              </span>
+            </h1>
+            <p className="max-w-xs text-[13px] leading-relaxed text-white/30">
+              Quanto voce realmente paga — e para onde vai cada centavo.
+            </p>
+          </div>
+
+          {/* Indicadores de legenda */}
+          <div className="flex items-center gap-4 text-[11px] text-white/35">
+            <span className="flex items-center gap-1.5">
+              <span className="h-[5px] w-[5px] rounded-full bg-citizen-green opacity-80" />
+              Preco Real
+            </span>
+            <span className="h-3 w-px bg-white/10" />
+            <span className="flex items-center gap-1.5">
+              <span className="h-[5px] w-[5px] rounded-full bg-tax-red opacity-80" />
+              Impostos
+            </span>
+            <span className="h-3 w-px bg-white/10" />
+            <span className="flex items-center gap-1.5">
+              <span className="h-[5px] w-[5px] rounded-full bg-gov-blue opacity-80" />
+              Federal
+            </span>
+          </div>
+        </header>
+
+        {/* Calculadora */}
+        <TaxCalculator />
+
+        {/* Footer */}
+        <footer className="mt-24 flex flex-col items-center gap-1 text-center">
+          <p className="text-[11px] text-white/18">
+            Aliquotas IBPT 2024/2025 · Reforma EC 132/2023 · IBGE Localidades API
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <p className="text-[10px] text-white/12">
+            Valores educacionais — nao constituem consultoria tributaria
+          </p>
+        </footer>
       </main>
     </div>
   );
