@@ -362,8 +362,17 @@ function SalarySkeleton() {
 // ============================================================
 // Componente principal
 // ============================================================
-export function SalaryDashboard() {
+export interface SalaryDashboardProps {
+  activeTab?: "empregado" | "empregador";
+  onResult?: (r: SalaryBreakdown | null) => void;
+}
+
+export function SalaryDashboard({ activeTab = "empregado", onResult }: SalaryDashboardProps) {
   const { rawSalary, setRawSalary, result, isValid } = useSalaryCalculator();
+
+  useEffect(() => {
+    onResult?.(result);
+  }, [result, onResult]);
 
   const taxTrail = result
     ? computeTaxTrail(result.totalTaxBurden)
@@ -410,49 +419,7 @@ export function SalaryDashboard() {
 
         {isValid && result ? (
           <>
-            {/* 3 stat cards */}
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* Custo real para a empresa */}
-              <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
-                <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
-                  Custo Real p/ Empresa
-                </p>
-                <p className="font-mono text-2xl font-bold tracking-tighter text-white/80">
-                  {BRL(result.realLaborCost)}
-                </p>
-                <p className="text-[11px] text-white/30">
-                  {PCT(result.totalEmployerCost / result.realLaborCost)} acima do salario bruto
-                </p>
-              </div>
-
-              {/* Salario Liquido */}
-              <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
-                <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
-                  Salario Liquido
-                </p>
-                <p className="font-mono text-2xl font-bold tracking-tighter text-citizen-green">
-                  {BRL(result.netSalary)}
-                </p>
-                <p className="text-[11px] text-white/30">
-                  {PCT(result.netSalary / result.realLaborCost)} do custo total da empresa
-                </p>
-              </div>
-
-              {/* Carga tributaria total */}
-              <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
-                <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
-                  Carga Tributaria Total
-                </p>
-                <p className="font-mono text-2xl font-bold tracking-tighter text-tax-red">
-                  {BRL(result.totalTaxBurden)}
-                </p>
-                <p className="text-[11px] text-white/30">
-                  {PCT(result.effectiveTotalRate)} do custo total da empresa
-                </p>
-              </div>
-            </div>
-
-            {/* Stacked bar */}
+            {/* Stacked bar — sempre visivel acima das tabs */}
             <div className="card-glass rounded-2xl p-5">
               <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.16em] text-white/25">
                 Decomposicao do Custo Total do Trabalho
@@ -460,27 +427,23 @@ export function SalaryDashboard() {
 
               <SalaryStackedBar result={result} />
 
-              {/* Legenda */}
               <div className="mt-3 flex flex-wrap gap-4">
                 {[
                   {
                     key: "net",
                     label: "Salario Liquido",
-                    value: result.netSalary,
                     color: "#10B981",
                     pct: result.netSalary / result.realLaborCost,
                   },
                   {
                     key: "emp",
                     label: "Retencoes (INSS + IRPF)",
-                    value: result.totalEmployeeDeductions,
                     color: "#EF4444",
                     pct: result.totalEmployeeDeductions / result.realLaborCost,
                   },
                   {
                     key: "patronal",
                     label: "Encargos Invisiveis",
-                    value: result.totalEmployerCost,
                     color: "#3B82F6",
                     pct: result.totalEmployerCost / result.realLaborCost,
                   },
@@ -502,131 +465,180 @@ export function SalaryDashboard() {
               </div>
             </div>
 
-            {/* Breakdown em 2 colunas */}
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Retencoes do empregado */}
-              <div className="card-glass rounded-2xl p-5">
-                <div className="mb-1 flex items-center gap-2">
-                  <span
-                    className="h-[5px] w-5 rounded-full"
-                    style={{ background: "#EF4444", opacity: 0.7 }}
-                  />
-                  <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/25">
-                    Retencoes do Empregado
+            {/* Conteudo por tab */}
+            {activeTab === "empregado" ? (
+              <>
+                {/* Stat cards — empregado */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
+                      Salario Liquido
+                    </p>
+                    <p className="font-mono text-2xl font-bold tracking-tighter text-citizen-green">
+                      {BRL(result.netSalary)}
+                    </p>
+                    <p className="text-[11px] text-white/30">
+                      {PCT(result.netSalary / result.realLaborCost)} do custo total
+                    </p>
+                  </div>
+                  <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
+                      Total Retido
+                    </p>
+                    <p className="font-mono text-2xl font-bold tracking-tighter text-tax-red">
+                      {BRL(result.totalEmployeeDeductions)}
+                    </p>
+                    <p className="text-[11px] text-white/30">
+                      {PCT(result.effectiveEmployeeRate)} do salario bruto
+                    </p>
+                  </div>
+                </div>
+
+                {/* Retencoes do empregado */}
+                <div className="card-glass rounded-2xl p-5">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="h-[5px] w-5 rounded-full" style={{ background: "#EF4444", opacity: 0.7 }} />
+                    <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/25">
+                      Retencoes do Empregado
+                    </p>
+                  </div>
+                  <p className="mb-3 text-[10px] text-white/20">
+                    Visiveis no holerite — descontados na fonte
                   </p>
-                </div>
-                <p className="mb-3 text-[10px] text-white/20">
-                  Visiveis no holerite — descontados na fonte
-                </p>
 
-                <div className="divide-y divide-white/[0.04]">
-                  <ChargeRow
-                    label="INSS"
-                    rate={result.inssEmployee / result.grossSalary}
-                    amount={result.inssEmployee}
-                    description={EMPLOYEE_GLOSSARY.INSS}
-                    color="#EF4444"
-                  />
-                  <ChargeRow
-                    label="IRPF"
-                    rate={result.irpfAmount / result.grossSalary}
-                    amount={result.irpfAmount}
-                    description={EMPLOYEE_GLOSSARY.IRPF}
-                    color="#F87171"
-                  />
-                </div>
-
-                <div
-                  className="mt-3 flex items-center justify-between rounded-xl px-4 py-3"
-                  style={{ background: "oklch(0.14 0 0 / 60%)", border: "1px solid oklch(1 0 0 / 5%)" }}
-                >
-                  <span className="text-[11px] text-white/35">Total Retido</span>
-                  <span className="font-mono text-[13px] font-bold tracking-tighter text-tax-red">
-                    {BRL(result.totalEmployeeDeductions)}
-                  </span>
-                </div>
-
-                {result.marginalIrpfRate > 0 && (
-                  <p className="mt-2.5 text-[10px] text-white/20">
-                    Aliquota marginal IRPF:{" "}
-                    <span className="font-mono font-semibold text-white/35">
-                      {(result.marginalIrpfRate * 100).toFixed(1)}%
-                    </span>{" "}
-                    · Aliquota efetiva:{" "}
-                    <span className="font-mono font-semibold text-white/35">
-                      {PCT(result.effectiveEmployeeRate)}
-                    </span>
-                  </p>
-                )}
-              </div>
-
-              {/* Encargos patronais */}
-              <div className="card-glass rounded-2xl p-5">
-                <div className="mb-1 flex items-center gap-2">
-                  <span
-                    className="h-[5px] w-5 rounded-full"
-                    style={{ background: "#3B82F6", opacity: 0.7 }}
-                  />
-                  <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/25">
-                    Encargos Patronais — Socio Oculto
-                  </p>
-                </div>
-                <p className="mb-3 text-[10px] text-white/20">
-                  Invisiveis ao empregado — pagos pela empresa sobre a sua folha
-                </p>
-
-                <div className="divide-y divide-white/[0.04]">
-                  {directCharges.map((charge) => (
+                  <div className="divide-y divide-white/[0.04]">
                     <ChargeRow
-                      key={charge.code}
-                      label={charge.label}
-                      rate={charge.rate}
-                      amount={charge.amount}
-                      description={charge.description}
-                      color={CHARGE_COLOR[charge.governmentLevel]}
+                      label="INSS"
+                      rate={result.inssEmployee / result.grossSalary}
+                      amount={result.inssEmployee}
+                      description={EMPLOYEE_GLOSSARY.INSS}
+                      color="#EF4444"
                     />
-                  ))}
-                </div>
+                    <ChargeRow
+                      label="IRPF"
+                      rate={result.irpfAmount / result.grossSalary}
+                      amount={result.irpfAmount}
+                      description={EMPLOYEE_GLOSSARY.IRPF}
+                      color="#F87171"
+                    />
+                  </div>
 
-                {provisions.length > 0 && (
-                  <>
-                    <div className="my-3 flex items-center gap-2">
-                      <div className="h-px flex-1 bg-white/[0.04]" />
-                      <span className="text-[9px] uppercase tracking-[0.12em] text-white/20">
-                        provisoes mensais
+                  <div
+                    className="mt-3 flex items-center justify-between rounded-xl px-4 py-3"
+                    style={{ background: "oklch(0.14 0 0 / 60%)", border: "1px solid oklch(1 0 0 / 5%)" }}
+                  >
+                    <span className="text-[11px] text-white/35">Total Retido</span>
+                    <span className="font-mono text-[13px] font-bold tracking-tighter text-tax-red">
+                      {BRL(result.totalEmployeeDeductions)}
+                    </span>
+                  </div>
+
+                  {result.marginalIrpfRate > 0 && (
+                    <p className="mt-2.5 text-[10px] text-white/20">
+                      Aliquota marginal IRPF:{" "}
+                      <span className="font-mono font-semibold text-white/35">
+                        {(result.marginalIrpfRate * 100).toFixed(1)}%
+                      </span>{" "}
+                      · Aliquota efetiva:{" "}
+                      <span className="font-mono font-semibold text-white/35">
+                        {PCT(result.effectiveEmployeeRate)}
                       </span>
-                      <div className="h-px flex-1 bg-white/[0.04]" />
-                    </div>
-                    <div className="divide-y divide-white/[0.04]">
-                      {provisions.map((charge) => (
-                        <ChargeRow
-                          key={charge.code}
-                          label={charge.label}
-                          rate={charge.rate}
-                          amount={charge.amount}
-                          description={charge.description}
-                          color={CHARGE_COLOR[charge.governmentLevel]}
-                          isProvision
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                <div
-                  className="mt-3 flex items-center justify-between rounded-xl px-4 py-3"
-                  style={{ background: "oklch(0.14 0 0 / 60%)", border: "1px solid oklch(1 0 0 / 5%)" }}
-                >
-                  <span className="text-[11px] text-white/35">Custo Invisivel</span>
-                  <span className="font-mono text-[13px] font-bold tracking-tighter text-gov-blue">
-                    {BRL(result.totalEmployerCost)}
-                  </span>
+                    </p>
+                  )}
                 </div>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                {/* Stat cards — empregador */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
+                      Custo Real p/ Empresa
+                    </p>
+                    <p className="font-mono text-2xl font-bold tracking-tighter text-white/80">
+                      {BRL(result.realLaborCost)}
+                    </p>
+                    <p className="text-[11px] text-white/30">
+                      {PCT(result.totalEmployerCost / result.realLaborCost)} acima do salario bruto
+                    </p>
+                  </div>
+                  <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
+                      Carga Tributaria Total
+                    </p>
+                    <p className="font-mono text-2xl font-bold tracking-tighter text-tax-red">
+                      {BRL(result.totalTaxBurden)}
+                    </p>
+                    <p className="text-[11px] text-white/30">
+                      {PCT(result.effectiveTotalRate)} do custo total da empresa
+                    </p>
+                  </div>
+                </div>
 
-            {/* Rastro do Sustento */}
-            {taxTrail && <TaxTrailSection shares={taxTrail} />}
+                {/* Encargos patronais */}
+                <div className="card-glass rounded-2xl p-5">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="h-[5px] w-5 rounded-full" style={{ background: "#3B82F6", opacity: 0.7 }} />
+                    <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/25">
+                      Encargos Patronais — Socio Oculto
+                    </p>
+                  </div>
+                  <p className="mb-3 text-[10px] text-white/20">
+                    Invisiveis ao empregado — pagos pela empresa sobre a sua folha
+                  </p>
+
+                  <div className="divide-y divide-white/[0.04]">
+                    {directCharges.map((charge) => (
+                      <ChargeRow
+                        key={charge.code}
+                        label={charge.label}
+                        rate={charge.rate}
+                        amount={charge.amount}
+                        description={charge.description}
+                        color={CHARGE_COLOR[charge.governmentLevel]}
+                      />
+                    ))}
+                  </div>
+
+                  {provisions.length > 0 && (
+                    <>
+                      <div className="my-3 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-white/[0.04]" />
+                        <span className="text-[9px] uppercase tracking-[0.12em] text-white/20">
+                          provisoes mensais
+                        </span>
+                        <div className="h-px flex-1 bg-white/[0.04]" />
+                      </div>
+                      <div className="divide-y divide-white/[0.04]">
+                        {provisions.map((charge) => (
+                          <ChargeRow
+                            key={charge.code}
+                            label={charge.label}
+                            rate={charge.rate}
+                            amount={charge.amount}
+                            description={charge.description}
+                            color={CHARGE_COLOR[charge.governmentLevel]}
+                            isProvision
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  <div
+                    className="mt-3 flex items-center justify-between rounded-xl px-4 py-3"
+                    style={{ background: "oklch(0.14 0 0 / 60%)", border: "1px solid oklch(1 0 0 / 5%)" }}
+                  >
+                    <span className="text-[11px] text-white/35">Custo Invisivel</span>
+                    <span className="font-mono text-[13px] font-bold tracking-tighter text-gov-blue">
+                      {BRL(result.totalEmployerCost)}
+                    </span>
+                  </div>
+                </div>
+
+                {taxTrail && <TaxTrailSection shares={taxTrail} />}
+              </>
+            )}
           </>
         ) : (
           <SalarySkeleton />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap,
@@ -18,6 +18,7 @@ import {
 import { Tooltip } from "radix-ui";
 import { useUtilityCalculator } from "@/hooks/use-utility-calculator";
 import { computeSocialImpact } from "@/services/transparencia";
+import { UtilityStackedBar } from "@/components/charts/utility-stacked-bar";
 import type { SocialEquivalence, UtilityTaxResult } from "@/types/utility";
 
 // ============================================================
@@ -251,8 +252,6 @@ function EquivalenceCard({ eq }: { eq: SocialEquivalence }) {
 // Resultado do calculo
 // ============================================================
 function UtilityResult({ result }: { result: UtilityTaxResult }) {
-  const netPct = 1 - result.totalTaxRate;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -275,15 +274,9 @@ function UtilityResult({ result }: { result: UtilityTaxResult }) {
           )}
         </div>
 
-        {/* Barra visual */}
-        <div className="mb-4 overflow-hidden rounded-full h-[6px] bg-white/5">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${netPct * 100}%`,
-              background: "linear-gradient(90deg, #10b98190, #10b98140)",
-            }}
-          />
+        {/* Barra visual segmentada */}
+        <div className="mb-4">
+          <UtilityStackedBar result={result} />
         </div>
 
         <div className="flex items-end justify-between">
@@ -379,7 +372,7 @@ function UtilityResult({ result }: { result: UtilityTaxResult }) {
 // ============================================================
 // Componente principal — UtilityScanner
 // ============================================================
-export function UtilityScanner() {
+export function UtilityScanner({ onResult }: { onResult?: (r: UtilityTaxResult) => void }) {
   const [activeTab, setActiveTab] = useState<"energia" | "agua">("energia");
   const [inputMode, setInputMode] = useState<"manual" | "simulado">("simulado");
   const [valueStr, setValueStr] = useState("");
@@ -388,6 +381,10 @@ export function UtilityScanner() {
 
   const { result, error, isCalculating, calculate, simulateRegional, reset } =
     useUtilityCalculator();
+
+  useEffect(() => {
+    if (result) onResult?.(result);
+  }, [result, onResult]);
 
   function switchTab(tab: "energia" | "agua") {
     setActiveTab(tab);
