@@ -1,24 +1,23 @@
 import { TaxCalculator } from "@/components/tax/tax-calculator";
+import { UtilityScanner } from "@/components/utility/utility-scanner";
 
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-background">
-      {/* Ambient light — spots ultra-suaves nos cantos */}
+      {/* Ambient Auras — Tax-Red 8% e Citizen-Green 8% (MISSION.md) */}
       <div className="ambient-top-right pointer-events-none fixed inset-0 z-0" />
       <div className="ambient-bottom-left pointer-events-none fixed inset-0 z-0" />
 
-      {/* Noise texture — 2.5% opacity, cobre toda a tela */}
+      {/* Noise texture — 2% opacity fractalNoise zinc-950 */}
       <div className="noise pointer-events-none fixed inset-0 z-10 opacity-[0.02]" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center px-4 py-14 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="mb-14 flex flex-col items-center gap-5 text-center">
-          {/* Chip de contexto */}
           <div className="chip-glass rounded-full px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
             Transparencia Fiscal — Brasil 2026
           </div>
 
-          {/* Logo */}
           <div className="flex flex-col items-center gap-1.5">
             <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
               <span
@@ -48,7 +47,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Indicadores de legenda */}
           <div className="flex items-center gap-4 text-[11px] text-white/35">
             <span className="flex items-center gap-1.5">
               <span className="h-[5px] w-[5px] rounded-full bg-citizen-green opacity-80" />
@@ -67,13 +65,25 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Calculadora */}
+        {/* Calculadora de Consumo */}
         <TaxCalculator />
+
+        {/* Separador secao */}
+        <div className="my-16 flex items-center gap-4 w-full max-w-lg">
+          <div className="flex-1 h-px bg-white/[0.04]" />
+          <span className="text-[10px] uppercase tracking-[0.2em] text-white/20">
+            Contas & Impacto Social
+          </span>
+          <div className="flex-1 h-px bg-white/[0.04]" />
+        </div>
+
+        {/* Scanner de Contas */}
+        <UtilityScanner />
 
         {/* Footer */}
         <footer className="mt-24 flex flex-col items-center gap-1 text-center">
           <p className="text-[11px] text-white/18">
-            Aliquotas IBPT 2024/2025 · Reforma EC 132/2023 · IBGE Localidades API
+            Aliquotas IBPT 2024/2025 · Reforma EC 132/2023 · LOA 2026 Lei 14.903/2024 · IBGE API
           </p>
           <p className="text-[10px] text-white/12">
             Valores educacionais — nao constituem consultoria tributaria

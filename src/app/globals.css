@@ -137,18 +137,20 @@
     background-size: 256px 256px;
   }
 
-  /* Ambient Auras — Tax-Red e Citizen-Green nos cantos opostos */
+  /* Ambient Auras — Tax-Red e Citizen-Green nos cantos opostos
+     Opacidade 8% conforme MISSION.md (rgba(239,68,68,0.08) e rgba(16,185,129,0.08))
+     Hex 8% = 14 (20/255 = 7.84%) */
   .ambient-top-right {
     background: radial-gradient(
       ellipse 700px 500px at 85% 0%,
-      #10b98109 0%,
+      rgba(16, 185, 129, 0.08) 0%,
       transparent 70%
     );
   }
   .ambient-bottom-left {
     background: radial-gradient(
       ellipse 600px 500px at 0% 100%,
-      #ef444410 0%,
+      rgba(239, 68, 68, 0.08) 0%,
       transparent 70%
     );
   }
