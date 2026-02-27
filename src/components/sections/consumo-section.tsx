@@ -12,6 +12,8 @@ import { BreakdownChart } from "@/components/tax/breakdown-chart";
 import { BreakdownList } from "@/components/tax/breakdown-list";
 import { NfeScanner } from "@/components/tax/nfe-scanner";
 import { LaborEffortCard } from "@/components/tax/labor-effort-card";
+import { ReformSlider } from "@/components/tax/reform-slider";
+import { IndignacaoCard } from "@/components/tax/indignacao-card";
 
 // ============================================================
 // Skeleton UI
@@ -116,6 +118,8 @@ export function ConsumoSection() {
     inputs,
     grossPrice,
     result,
+    resultAtual,
+    result2026,
     isValid,
     isDetectingLocation,
     setGrossPriceRaw,
@@ -162,8 +166,16 @@ export function ConsumoSection() {
             onGrossPriceChange={setGrossPriceRaw}
             onCategoryChange={setProductCategory}
             onUfChange={setUf}
-            onRegimeChange={setRegime}
           />
+
+          {/* Slider Antes/Depois — visivel apenas quando ha valor */}
+          {isValid && resultAtual && result2026 && (
+            <ReformSlider
+              resultAtual={resultAtual}
+              result2026={result2026}
+              onRegimeChange={setRegime}
+            />
+          )}
 
           {isValid && result ? (
             <>
@@ -179,6 +191,11 @@ export function ConsumoSection() {
                 isHybrid={result.isHybrid}
               />
               <LaborEffortCard totalTaxAmount={result.totalTaxAmount} />
+              <IndignacaoCard
+                totalTaxAmount={result.totalTaxAmount}
+                laborWorkHours={null}
+                grossPrice={grossPrice!}
+              />
             </>
           ) : (
             <CalculatorSkeleton />

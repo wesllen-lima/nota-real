@@ -122,3 +122,13 @@ export interface SocialEquivalence {
   iconKey: "merenda" | "uti" | "livro" | "policia" | "vacina" | "consulta";
   colorKey: "green" | "blue" | "red";
 }
+
+// ============================================================
+// Estado de formulario da secao Utilidades (persistido no context)
+// ============================================================
+export interface UtilityFormInputs {
+  activeTab: UtilityType;
+  inputMode: InputMode;
+  valueStr: string;
+  regime: "atual" | "reforma_2026";
+}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { validateChave, getUFFromChave } from "@/services/nfe";
 import { calculateTaxBreakdown } from "@/lib/tax-engine";
+import { useAppContext } from "@/context/impact-context";
 import type { NFeChaveParsed } from "@/types/nfe";
 import type { ProductCategory, TaxCalculationResult } from "@/types/tax";
 
@@ -44,8 +45,7 @@ const MOCK_TEMPLATES: Array<{
 function generateSimulatedItems(key: string): SimulatedItem[] {
   const sum = key.split("").reduce((s, c) => s + parseInt(c, 10), 0);
   const seed = sum % MOCK_TEMPLATES.length;
-  // Fator de variacao de preco entre 0% e 4.5% baseado na chave
-  const factor = 1 + (seed / 200);
+  const factor = 1 + seed / 200;
 
   const indices = [
     seed,
@@ -62,86 +62,76 @@ function generateSimulatedItems(key: string): SimulatedItem[] {
       productCategory: t.category,
       regime: "reforma_2026",
     });
-    return {
-      nItem: i + 1,
-      xProd: t.xProd,
-      category: t.category,
-      grossPrice,
-      taxResult,
-    };
+    return { nItem: i + 1, xProd: t.xProd, category: t.category, grossPrice, taxResult };
   });
 }
 
+const INITIAL_STATE: NfeScannerState = {
+  rawInput: "",
+  status: "idle",
+  errorMessage: null,
+  parsedKey: null,
+  uf: null,
+  items: [],
+};
+
 export function useNfeScanner() {
+  const { nfeRawInput, setNfeRawInput } = useAppContext();
+
   const [state, setState] = useState<NfeScannerState>({
-    rawInput: "",
-    status: "idle",
-    errorMessage: null,
-    parsedKey: null,
-    uf: null,
-    items: [],
+    ...INITIAL_STATE,
+    rawInput: nfeRawInput,
   });
 
-  const handleInput = useCallback((raw: string) => {
-    // Strip tudo que nao for digito e limita em 44
-    const digits = raw.replace(/\D/g, "").slice(0, 44);
+  const handleInput = useCallback(
+    (raw: string) => {
+      const digits = raw.replace(/\D/g, "").slice(0, 44);
+      setNfeRawInput(digits);
 
-    if (digits.length < 44) {
+      if (digits.length < 44) {
+        setState({ ...INITIAL_STATE, rawInput: digits });
+        return;
+      }
+
+      const result = validateChave(digits);
+      if (!result.valid) {
+        setState({
+          rawInput: digits,
+          status: "invalid",
+          errorMessage: result.error.message,
+          parsedKey: null,
+          uf: null,
+          items: [],
+        });
+        return;
+      }
+
+      const uf = getUFFromChave(result.parsed);
+      const items = generateSimulatedItems(digits);
+
       setState({
         rawInput: digits,
-        status: "idle",
+        status: "valid",
         errorMessage: null,
-        parsedKey: null,
-        uf: null,
-        items: [],
+        parsedKey: result.parsed,
+        uf,
+        items,
       });
-      return;
+    },
+    [setNfeRawInput]
+  );
+
+  // Restaura estado se houver chave persistida no context
+  useEffect(() => {
+    if (nfeRawInput.length === 44 && state.status === "idle") {
+      handleInput(nfeRawInput);
     }
-
-    const result = validateChave(digits);
-    if (!result.valid) {
-      setState({
-        rawInput: digits,
-        status: "invalid",
-        errorMessage: result.error.message,
-        parsedKey: null,
-        uf: null,
-        items: [],
-      });
-      return;
-    }
-
-    const uf = getUFFromChave(result.parsed);
-    const items = generateSimulatedItems(digits);
-
-    setState({
-      rawInput: digits,
-      status: "valid",
-      errorMessage: null,
-      parsedKey: result.parsed,
-      uf,
-      items,
-    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const totalTaxAmount = state.items.reduce(
-    (s, item) => s + item.taxResult.totalTaxAmount,
-    0
-  );
-  const totalGrossPrice = state.items.reduce(
-    (s, item) => s + item.grossPrice,
-    0
-  );
-  const totalNetPrice = state.items.reduce(
-    (s, item) => s + item.taxResult.netPrice,
-    0
-  );
+  const totalTaxAmount = state.items.reduce((s, item) => s + item.taxResult.totalTaxAmount, 0);
+  const totalGrossPrice = state.items.reduce((s, item) => s + item.grossPrice, 0);
+  const totalNetPrice = state.items.reduce((s, item) => s + item.taxResult.netPrice, 0);
 
-  return {
-    state,
-    handleInput,
-    totalTaxAmount,
-    totalGrossPrice,
-    totalNetPrice,
-  };
+  return { state, handleInput, totalTaxAmount, totalGrossPrice, totalNetPrice };
 }

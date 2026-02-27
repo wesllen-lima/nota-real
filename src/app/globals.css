@@ -60,6 +60,10 @@
 :root {
   --radius: 0.75rem;
 
+  /* Ambient auras — intensidade dinamica via JS (useAmbientAura hook) */
+  --ambient-intensity-red: 0.08;
+  --ambient-intensity-green: 0.08;
+
   --background: #09090b;        /* zinc-950 puro */
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.187 0 0);
@@ -114,10 +118,18 @@
   .card-glass {
     background:
       oklch(0.187 0 0 / 45%) padding-box,
-      linear-gradient(150deg, oklch(1 0 0 / 9%) 0%, oklch(1 0 0 / 2%) 50%, oklch(1 0 0 / 0%) 100%) border-box;
+      linear-gradient(150deg, oklch(1 0 0 / 5%) 0%, oklch(1 0 0 / 1%) 50%, oklch(1 0 0 / 0%) 100%) border-box;
     border: 1px solid transparent;
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* Variante para Drawer — fundo mais opaco, sem blur (overlay sobre dashboard) */
+  .drawer-glass {
+    background:
+      oklch(0.155 0 0 / 98%) padding-box,
+      linear-gradient(150deg, oklch(1 0 0 / 5%) 0%, oklch(1 0 0 / 0%) 100%) border-box;
+    border: 1px solid transparent;
   }
 
   /* Variante menor para chips, badges */
@@ -143,16 +155,18 @@
   .ambient-top-right {
     background: radial-gradient(
       ellipse 700px 500px at 85% 0%,
-      rgba(16, 185, 129, 0.08) 0%,
+      rgba(16, 185, 129, var(--ambient-intensity-green)) 0%,
       transparent 70%
     );
+    transition: background 0.6s ease;
   }
   .ambient-bottom-left {
     background: radial-gradient(
       ellipse 600px 500px at 0% 100%,
-      rgba(239, 68, 68, 0.08) 0%,
+      rgba(239, 68, 68, var(--ambient-intensity-red)) 0%,
       transparent 70%
     );
+    transition: background 0.6s ease;
   }
 
   /* Input estilo premium */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import { useUtilityCalculator } from "@/hooks/use-utility-calculator";
+import { useAppContext } from "@/context/impact-context";
 import { computeSocialImpact } from "@/services/transparencia";
 import { UtilityStackedBar } from "@/components/charts/utility-stacked-bar";
 import type { SocialEquivalence, UtilityTaxResult } from "@/types/utility";
@@ -111,7 +112,7 @@ function TaxRow({
     >
       <div className="flex items-center gap-2">
         <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-        <span className="text-[13px] text-white/60 font-mono">{label}</span>
+        <span className="text-[13px] text-white/60 font-medium">{label}</span>
         {tooltip && <InfoTip text={tooltip} />}
       </div>
       <div className="flex items-center gap-3">
@@ -373,10 +374,8 @@ function UtilityResult({ result }: { result: UtilityTaxResult }) {
 // Componente principal — UtilityScanner
 // ============================================================
 export function UtilityScanner({ onResult }: { onResult?: (r: UtilityTaxResult) => void }) {
-  const [activeTab, setActiveTab] = useState<"energia" | "agua">("energia");
-  const [inputMode, setInputMode] = useState<"manual" | "simulado">("simulado");
-  const [valueStr, setValueStr] = useState("");
-  const [regime, setRegime] = useState<"atual" | "reforma_2026">("atual");
+  const { utilityInputs, setUtilityInputs } = useAppContext();
+  const { activeTab, inputMode, valueStr, regime } = utilityInputs;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { result, error, isCalculating, calculate, simulateRegional, reset } =
@@ -387,15 +386,21 @@ export function UtilityScanner({ onResult }: { onResult?: (r: UtilityTaxResult) 
   }, [result, onResult]);
 
   function switchTab(tab: "energia" | "agua") {
-    setActiveTab(tab);
-    setValueStr("");
+    setUtilityInputs({ ...utilityInputs, activeTab: tab, valueStr: "" });
     reset();
   }
 
   function switchMode(mode: "manual" | "simulado") {
-    setInputMode(mode);
-    setValueStr("");
+    setUtilityInputs({ ...utilityInputs, inputMode: mode, valueStr: "" });
     reset();
+  }
+
+  function setValueStr(v: string) {
+    setUtilityInputs({ ...utilityInputs, valueStr: v });
+  }
+
+  function setRegime(r: "atual" | "reforma_2026") {
+    setUtilityInputs({ ...utilityInputs, regime: r });
   }
 
   function handleCalculate() {

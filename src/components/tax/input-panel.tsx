@@ -1,8 +1,7 @@
 "use client";
 
-import { clsx } from "clsx";
-import type { ProductCategory, TaxRegime } from "@/types/tax";
-import type { CalculatorInputState } from "@/hooks/use-tax-calculator";
+import type { ProductCategory } from "@/types/tax";
+import type { CalculatorInputState } from "@/context/impact-context";
 import type { Estado } from "@/types/ibge";
 
 const CATEGORY_LABELS: Record<ProductCategory, string> = {
@@ -22,7 +21,6 @@ interface Props {
   onGrossPriceChange: (v: string) => void;
   onCategoryChange: (v: ProductCategory) => void;
   onUfChange: (v: string) => void;
-  onRegimeChange: (v: TaxRegime) => void;
 }
 
 export function InputPanel({
@@ -33,7 +31,6 @@ export function InputPanel({
   onGrossPriceChange,
   onCategoryChange,
   onUfChange,
-  onRegimeChange,
 }: Props) {
   return (
     <div className="card-glass w-full rounded-2xl p-6">
@@ -41,7 +38,7 @@ export function InputPanel({
         Entrada
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         {/* Valor */}
         <div className="flex flex-col gap-2">
           <label className="text-[11px] text-white/40">Valor pago (R$)</label>
@@ -96,28 +93,6 @@ export function InputPanel({
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Regime */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[11px] text-white/40">Sistema fiscal</label>
-          <div className="flex gap-2">
-            {(["atual", "reforma_2026"] as TaxRegime[]).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => onRegimeChange(r)}
-                className={clsx(
-                  "flex-1 rounded-xl px-3 py-[11px] text-[11px] font-medium transition-all duration-150",
-                  inputs.regime === r
-                    ? "border border-gov-blue/30 bg-gov-blue/10 text-gov-blue"
-                    : "border border-white/6 bg-white/3 text-white/35 hover:bg-white/6 hover:text-white/55"
-                )}
-              >
-                {r === "atual" ? "Atual" : "2026 IVA"}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>

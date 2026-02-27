@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { calculateSalaryBreakdown } from "@/lib/salary-engine";
+import { useAppContext } from "@/context/impact-context";
 import type { SalaryBreakdown } from "@/types/salary";
 
 export function useSalaryCalculator() {
-  const [rawSalary, setRawSalary] = useState("");
+  const { rawSalary, setRawSalary } = useAppContext();
 
   const grossSalary = useMemo<number | null>(() => {
     // Aceita tanto "3500" quanto "3.500,00" quanto "3500.50"

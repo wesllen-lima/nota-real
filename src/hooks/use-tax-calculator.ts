@@ -1,33 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { calculateTaxBreakdown } from "@/lib/tax-engine";
-import { detectUF } from "@/services/geolocation";
-import type {
-  ExternalTaxRates,
-  ProductCategory,
-  TaxCalculationResult,
-  TaxRegime,
-} from "@/types/tax";
+import { useAppContext, type CalculatorInputState } from "@/context/impact-context";
+import type { ExternalTaxRates, ProductCategory, TaxCalculationResult, TaxRegime } from "@/types/tax";
 
-export interface CalculatorInputState {
-  grossPriceRaw: string;
-  productCategory: ProductCategory;
-  uf: string;
-  regime: TaxRegime;
-}
-
-const INITIAL_STATE: CalculatorInputState = {
-  grossPriceRaw: "",
-  productCategory: "geral",
-  uf: "",
-  regime: "atual",
-};
+export type { CalculatorInputState };
 
 export interface UseTaxCalculatorReturn {
   inputs: CalculatorInputState;
   grossPrice: number | null;
   result: TaxCalculationResult | null;
+  resultAtual: TaxCalculationResult | null;
+  result2026: TaxCalculationResult | null;
   isValid: boolean;
   isDetectingLocation: boolean;
   setGrossPriceRaw: (value: string) => void;
@@ -38,73 +23,63 @@ export interface UseTaxCalculatorReturn {
 }
 
 export function useTaxCalculator(): UseTaxCalculatorReturn {
-  const [inputs, setInputs] = useState<CalculatorInputState>(INITIAL_STATE);
-  const [isDetectingLocation, setIsDetectingLocation] = useState(true);
-  const [externalRates, setExternalRates] = useState<
-    ExternalTaxRates | undefined
-  >(undefined);
-
-  // Auto-deteccao de UF via Geolocation API + Nominatim
-  useEffect(() => {
-    let cancelled = false;
-    setIsDetectingLocation(true);
-    detectUF().then((result) => {
-      if (cancelled) return;
-      setIsDetectingLocation(false);
-      if (result) {
-        setInputs((prev) => ({ ...prev, uf: result.uf }));
-      } else {
-        // Fallback: UF vazia, usuario seleciona manualmente
-        setInputs((prev) => ({ ...prev, uf: "" }));
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { consumoInputs, setConsumoInputs, isDetectingLocation } = useAppContext();
+  const [externalRates, setExternalRates] = useState<ExternalTaxRates | undefined>(undefined);
 
   const grossPrice = useMemo<number | null>(() => {
-    const normalized = inputs.grossPriceRaw.replace(",", ".");
+    const normalized = consumoInputs.grossPriceRaw.replace(",", ".");
     const parsed = parseFloat(normalized);
     return isNaN(parsed) || parsed <= 0 ? null : parsed;
-  }, [inputs.grossPriceRaw]);
+  }, [consumoInputs.grossPriceRaw]);
 
-  const result = useMemo<TaxCalculationResult | null>(() => {
+  const resultAtual = useMemo<TaxCalculationResult | null>(() => {
     if (grossPrice === null) return null;
     try {
       return calculateTaxBreakdown(
-        {
-          grossPrice,
-          productCategory: inputs.productCategory,
-          regime: inputs.regime,
-        },
+        { grossPrice, productCategory: consumoInputs.productCategory, regime: "atual" },
         externalRates
       );
     } catch {
       return null;
     }
-  }, [grossPrice, inputs.productCategory, inputs.regime, externalRates]);
+  }, [grossPrice, consumoInputs.productCategory, externalRates]);
+
+  const result2026 = useMemo<TaxCalculationResult | null>(() => {
+    if (grossPrice === null) return null;
+    try {
+      return calculateTaxBreakdown(
+        { grossPrice, productCategory: consumoInputs.productCategory, regime: "reforma_2026" },
+        externalRates
+      );
+    } catch {
+      return null;
+    }
+  }, [grossPrice, consumoInputs.productCategory, externalRates]);
+
+  const result = consumoInputs.regime === "reforma_2026" ? result2026 : resultAtual;
 
   function setGrossPriceRaw(value: string) {
-    setInputs((prev) => ({ ...prev, grossPriceRaw: value }));
+    setConsumoInputs({ ...consumoInputs, grossPriceRaw: value });
   }
 
   function setProductCategory(value: ProductCategory) {
-    setInputs((prev) => ({ ...prev, productCategory: value }));
+    setConsumoInputs({ ...consumoInputs, productCategory: value });
   }
 
   function setUf(value: string) {
-    setInputs((prev) => ({ ...prev, uf: value }));
+    setConsumoInputs({ ...consumoInputs, uf: value });
   }
 
   function setRegime(value: TaxRegime) {
-    setInputs((prev) => ({ ...prev, regime: value }));
+    setConsumoInputs({ ...consumoInputs, regime: value });
   }
 
   return {
-    inputs,
+    inputs: consumoInputs,
     grossPrice,
     result,
+    resultAtual,
+    result2026,
     isValid: grossPrice !== null,
     isDetectingLocation,
     setGrossPriceRaw,

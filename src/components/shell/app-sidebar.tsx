@@ -2,10 +2,10 @@
 
 import { LayoutDashboard, ShoppingCart, Briefcase, Zap } from "lucide-react";
 import { clsx } from "clsx";
-import { useAppContext, type SectionId } from "@/context/impact-context";
+import { useAppContext, type DrawerId } from "@/context/impact-context";
 
 export const NAV_ITEMS: Array<{
-  id: SectionId;
+  id: "dashboard" | DrawerId & string;
   label: string;
   Icon: typeof LayoutDashboard;
 }> = [
@@ -16,7 +16,15 @@ export const NAV_ITEMS: Array<{
 ];
 
 export function AppSidebar() {
-  const { activeSection, setActiveSection } = useAppContext();
+  const { openDrawer, setOpenDrawer } = useAppContext();
+
+  function handleNav(id: string) {
+    if (id === "dashboard") {
+      setOpenDrawer(null);
+    } else {
+      setOpenDrawer(id as DrawerId);
+    }
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[240px] flex-col border-r border-white/[0.05] bg-zinc-950/80 backdrop-blur-xl md:flex">
@@ -39,22 +47,25 @@ export function AppSidebar() {
 
       {/* Nav */}
       <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
-        {NAV_ITEMS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setActiveSection(id)}
-            className={clsx(
-              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
-              activeSection === id
-                ? "border border-gov-blue/15 bg-gov-blue/10 text-gov-blue"
-                : "border border-transparent text-white/35 hover:bg-white/[0.04] hover:text-white/60"
-            )}
-          >
-            <Icon size={15} className="shrink-0" />
-            {label}
-          </button>
-        ))}
+        {NAV_ITEMS.map(({ id, label, Icon }) => {
+          const isActive = id === "dashboard" ? openDrawer === null : openDrawer === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => handleNav(id)}
+              className={clsx(
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+                isActive
+                  ? "border border-gov-blue/15 bg-gov-blue/10 text-gov-blue"
+                  : "border border-transparent text-white/35 hover:bg-white/[0.04] hover:text-white/60"
+              )}
+            >
+              <Icon size={15} className="shrink-0" />
+              {label}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Footer */}
