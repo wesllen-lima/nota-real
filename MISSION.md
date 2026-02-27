@@ -1,85 +1,71 @@
 # MISSION.md: Nota Real — Plataforma de Transparência Fiscal
 
 ## 1. Visão Geral
-O Nota Real é uma ferramenta de auditoria social e inteligência fiscal projetada para traduzir a complexidade do sistema tributário brasileiro em linguagem humana. A plataforma fornece clareza imediata sobre o custo real do consumo, permitindo que o cidadão visualize a carga tributária efetiva e o destino dos recursos públicos através de uma interface de elite (Stripe/Vercel level).
+O Nota Real é uma ferramenta de auditoria social e inteligência fiscal projetada para revelar o custo invisível do Estado Brasileiro. A plataforma traduz a complexidade tributária sobre o consumo, a renda e o patrimônio em dados compreensíveis, permitindo que o cidadão visualize o **"Sócio Oculto"** em cada aspecto de sua vida financeira.
 
-## 2. Fluxo de Usuário: Atrito Zero (Zero Friction)
-A experiência deve ser instantânea e baseada em dados reais, eliminando barreiras burocráticas.
-- **Leitura de NF-e:** Entrada via chave de acesso (44 dígitos) ou captura de QR Code. O sistema realiza o parser do XML/HTML para extrair tributos item a item.
-- **Detecção Automática:** Uso de Geolocation API para identificar UF/Município no primeiro acesso e aplicar alíquotas regionais.
-- **Entrada Manual Inteligente:** Campo de valor único com busca semântica de produtos (ex: "Gasolina", "Arroz").
-- **Cálculo Progressivo:** Atualização em tempo real dos gráficos e do "Preço Real" conforme a interação.
+## 2. Fluxo de Usuário: Elite UX (Zero Friction)
+A experiência deve ser instantânea, eliminando barreiras burocráticas:
+- **Raio-X NF-e:** Processamento de chaves de 44 dígitos com parser XML para extração de tributos item a item (Concluído).
+- **Scanner de Contas (Novo):** Entrada de faturas de Energia e Água para revelar impostos em cascata (ICMS sobre PIS/COFINS) e taxas de iluminação pública.
+- **Raio-X do Holerite:** Cálculo de retenções (IRPF/INSS) e encargos patronais invisíveis (FGTS, Sistema S) para mostrar o custo real do trabalho (Concluído).
+- **Detecção Inteligente:** Geolocation API para UF (foco em Rondônia) e Município para aplicação automática de alíquotas de IPVA e IPTU.
 
-## 3. Funcionalidades de Alto Impacto (Core Features)
-- **Scanner de Nota Fiscal (Raio-X):** Decomposição total de notas fiscais reais em "Valor do Produto" vs "Fatia do Governo".
-- **Simulador da Reforma 2026:** Comparativo dinâmico na própria nota entre o sistema antigo (ICMS/PIS/COFINS) e o novo IVA Dual (IBS/CBS - alíquota teste de 1%).
-- **Conversão em Horas de Trabalho:** Tradução do imposto pago em tempo de esforço laboral baseado na renda informada.
-- **Rastro Social do Imposto:** Conexão entre o tributo pago e a entrega pública (Ex: "O imposto desta nota equivale a X merendas escolares em sua cidade").
-- **Personal Tax Tracker:** Dashboard histórico que consolida todos os impostos pagos em notas escaneadas pelo usuário.
+## 3. Funcionalidades de Alto Impacto
+- **Simulador da Reforma 2026 (Híbrido):** Exibição obrigatória da carga legada somada ao **1%** do IVA Dual de teste (CBS 0,9% + IBS 0,1%).
+- **Calculadora de Esforço Laboral:** Conversão do imposto total em tempo de vida (horas/dias de trabalho) baseado na renda real do usuário (Concluído).
+- **Calculadora de Patrimônio:** Impacto anual de impostos sobre bens (ex: IPVA para o Onix 2016 e IPTU residencial).
+- **O Rastro do Sustento (Novo):** Decomposição do destino do imposto com base na LOA 2026:
+    - **Previdência:** O peso das aposentadorias e pensões (maior fatia do orçamento).
+    - **Benefícios Sociais:** Quanto sustenta programas como Bolsa Família e BPC.
+    - **Máquina Pública:** Custo operacional dos Três Poderes e funcionalismo.
+- **Dia da Liberdade de Impostos:** Contador anual que indica até qual dia do ano o usuário trabalhou exclusivamente para custear o governo.
 
-## 4. Glossário para o Cidadão (Linguagem Humana)
-- **ICMS:** Imposto estadual sobre a circulação de mercadorias e serviços.
-- **IBS / CBS:** Os novos impostos da Reforma de 2026 (IVA Dual). O IBS é subnacional e a CBS é federal.
-- **PIS / COFINS:** Contribuições federais destinadas à seguridade social e assistência.
-- **IPI:** Imposto sobre produtos que saem das fábricas (Industrializados).
-- **IBPT:** Base de dados oficial que estima a carga tributária média por NCM (Nomenclatura Comum do Mercosul).
+## 4. O Mapa da Arrecadação Brasileira (Lista de Tributos 2026)
 
-## 5. UI/UX Protocol: Elite Dark Dashboard (2026 Standards)
-- **Tema:** Dark Mode exclusivo utilizando paleta `Zinc-950`.
-- **Estética:** Glassmorphism com bordas de 1px translúcidas (`border-zinc-800/50`) e `backdrop-blur`.
-- **Paleta Semântica & Glows:**
-    - **Tax-Red:** `#EF4444` (Glow para impostos e saídas).
-    - **Citizen-Green:** `#10B981` (Glow para valor real e economia).
-    - **Gov-Blue:** `#3B82F6` (Glow para dados oficiais e transparência).
-- **Tipografia:** Geist Sans para interface; fontes mono-espaçadas para dados financeiros e chaves de NF-e.
-- **Animações:** Feedback tátil e visual via Framer Motion em transições de layout.
+### 4.1 Esfera Federal (União)
+- **IRPF:** Imposto sobre a renda pessoal.
+- **IPI:** Imposto sobre produtos industrializados (saída da fábrica).
+- **IOF:** Imposto sobre operações financeiras (crédito, câmbio, seguros).
+- **II / IE:** Impostos sobre Importação e Exportação (incide em compras internacionais).
+- **PIS / COFINS:** Contribuições sociais (em transição para a CBS).
+- **CBS (Nova):** Contribuição sobre Bens e Serviços (0,9% de teste em 2026).
+- **CSLL:** Contribuição Social sobre o Lucro Líquido (incidência indireta).
 
-## 5.1 Inteligência Fiscal — Regra de Transição Híbrida (EC 132/2023)
+### 4.2 Esfera Estadual (Estados)
+- **ICMS:** Imposto sobre mercadorias, energia, água e comunicação.
+- **IPVA:** Imposto sobre a propriedade de veículos (ex: Onix 2016).
+- **ITCMD:** Imposto sobre heranças e doações.
+- **IBS Estadual (Novo):** Parcela estadual do IVA Dual (0,1% de teste em 2026).
 
-Em 2026 o sistema tributário brasileiro opera em **modo HÍBRIDO obrigatório**:
+### 4.3 Esfera Municipal (Municípios)
+- **IPTU:** Imposto sobre propriedade territorial urbana.
+- **ISS:** Imposto sobre serviços (streaming, profissionais liberais).
+- **ITBI:** Imposto sobre transmissão de bens imóveis.
+- **COSIP / CIP:** Taxa de iluminação pública (embutida na conta de luz).
 
-- O sistema **legado** (ICMS, PIS, COFINS, IPI, ISS) permanece **100% ativo** com alíquotas plenas.
-- O **IVA Dual de teste** (CBS 0,9% + IBS 0,1% = 1%) é cobrado **em paralelo**, sobre a mesma base.
-- O período de transição completo é **2026–2032** (7 anos). Apenas em **2033** o sistema legado começa
-  a ser extinto progressivamente.
-- Em 2026 o contribuinte paga: **carga legada + 1% IVA = carga TOTAL maior** que apenas o regime atual.
+## 5. Inteligência Fiscal — Regra de Transição 2026 (EC 132/2023)
+Em 2026, o sistema opera em modo **HÍBRIDO**:
+- O sistema legado (ICMS, PIS, COFINS, IPI, ISS) permanece **100% ativo**.
+- O IVA Dual de teste (CBS 0,9% + IBS 0,1% = 1%) é cobrado **em paralelo**.
+- **Fórmula:** Carga 2026 = (Tributos Atuais) + (1,0% Adicional de Teste).
 
-**Implicação para o simulador:**
-A simulação `reforma_2026` NUNCA deve mostrar queda de imposto. Deve exibir:
-1. Fatia "Sistema Legado" (ICMS/PIS/COFINS/IPI) — idêntica ao regime atual
-2. Fatia "IVA Dual — Fase de Teste" (CBS + IBS) — 1% adicional de forma explícita
-3. Total combinado, provando que a simplificação ainda não reduziu a carga em 2026
+## 6. UI/UX Protocol: Vercel/Stripe Level
+- **Tema:** Dark Mode exclusivo (`Zinc-950`) com ruído (noise) de 2% de opacidade.
+- **Ambient Auras (Glows):** Substituir gradientes por sombras amplas e sutis:
+    - **Tax-Red:** `rgba(239, 68, 68, 0.08)` para impostos.
+    - **Citizen-Green:** `rgba(16, 185, 129, 0.1)` para valor real.
+- **Tipografia:** `Geist Sans` para interface e `Geist Mono` para valores monetários.
 
-## 6. Estratégia de Sprints
+## 7. Estratégia de Sprints (Status 2026)
 
-### Sprint 1: Infraestrutura e APIs de Localização
-- Implementação de `src/services/` para consumo de APIs do IBGE e Geolocation.
-- **Regra de Ouro:** Proibido qualquer dado geográfico ou tributário hardcoded.
+### Sprint 1, 2 & 3: Infraestrutura & Scanner (Concluído)
+- Localização, Motor Fiscal Híbrido e Raio-X de notas fiscais.
 
-### Sprint 2: Motor NF-e e Inteligência Fiscal
-- Implementação de serviço para consulta e parser de NF-e (via BrasilAPI ou integração SEFAZ).
-- Atualização do `tax-engine.ts` para processar arrays de itens e transição para Reforma 2026.
+### Sprint 4: Renda & Patrimônio (Concluído)
+- Cálculo de IRPF/INSS 2026, encargos patronais e calculadoras de IPVA/IPTU.
 
-### Sprint 3: Core UI & Elite Design System
-- Setup Tailwind 4.0 e componentes shadcn/ui customizados para Dark/Zinc.
-- Implementação do Layout principal com Glassmorphism e navegação fluida.
+### Sprint 5: Contas & Impacto Social (Próxima)
+- Scanner de faturas de Energia/Água e integração com API do Portal da Transparência (CGU).
 
-### Sprint 4: Visualização e Dashboards de Impacto
-- Gráficos Recharts com gradientes e áreas de glow para "Fatia do Governo".
-- Implementação da feature de "Horas de Trabalho" e "Rastro Social".
-
-### Sprint 5: Auditoria, Performance e Deploy
-- Painel de auditoria detalhado por item e memória de cálculo.
-- Otimização extrema via React Compiler e monitoramento de performance.
-
-## 7. Fontes de Dados (Vigência 2026)
-- **Geografia:** API de Localidades do IBGE.
-- **Notas Fiscais:** BrasilAPI / Integrações diretas de consulta NF-e.
-- **Tributação:** API IBPT (Tabelas 2026).
-- **Gastos Públicos:** API do Portal da Transparência (CGU).
-
-## 8. Protocolo de Engenharia
-- **Arquitetura:** Clean Architecture (Separação entre Services, Hooks e Components).
-- **Segurança:** Chaves de acesso e dados sensíveis de notas fiscais tratados com criptografia em repouso.
-- **Performance:** Uso obrigatório de React Server Components (RSC) para processamento de dados e Next.js Turbo para build.
-- **Qualidade:** TypeScript Estrito com validação de contratos de API via Zod.
+### Sprint 6: Auditoria & Performance
+- Otimização via React Compiler e micro-interações Framer Motion.
