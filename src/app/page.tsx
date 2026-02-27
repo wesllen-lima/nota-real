@@ -8,7 +8,7 @@ export default function Home() {
       <div className="ambient-bottom-left pointer-events-none fixed inset-0 z-0" />
 
       {/* Noise texture — 2.5% opacity, cobre toda a tela */}
-      <div className="noise pointer-events-none fixed inset-0 z-10 opacity-[0.025]" />
+      <div className="noise pointer-events-none fixed inset-0 z-10 opacity-[0.02]" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center px-4 py-14 sm:px-6 lg:px-8">
         {/* Header */}

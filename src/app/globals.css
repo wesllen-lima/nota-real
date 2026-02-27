@@ -137,18 +137,18 @@
     background-size: 256px 256px;
   }
 
-  /* Ambient light corners */
+  /* Ambient Auras — Tax-Red e Citizen-Green nos cantos opostos */
   .ambient-top-right {
     background: radial-gradient(
-      ellipse 600px 600px at 100% 0%,
-      #3b82f610 0%,
+      ellipse 700px 500px at 85% 0%,
+      #10b98109 0%,
       transparent 70%
     );
   }
   .ambient-bottom-left {
     background: radial-gradient(
-      ellipse 500px 500px at 0% 100%,
-      #ef444408 0%,
+      ellipse 600px 500px at 0% 100%,
+      #ef444410 0%,
       transparent 70%
     );
   }

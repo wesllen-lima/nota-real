@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calculator, ScanLine } from "lucide-react";
+import { Calculator, ScanLine, Briefcase } from "lucide-react";
 import { clsx } from "clsx";
 import { useTaxCalculator } from "@/hooks/use-tax-calculator";
 import { useEstados } from "@/hooks/use-estados";
@@ -11,6 +11,7 @@ import { BreakdownChart } from "./breakdown-chart";
 import { BreakdownList } from "./breakdown-list";
 import { NfeScanner } from "./nfe-scanner";
 import { LaborEffortCard } from "./labor-effort-card";
+import { SalaryDashboard } from "@/components/salary/salary-dashboard";
 
 // ============================================================
 // Skeleton UI — Progressive Disclosure
@@ -163,11 +164,12 @@ function CalculatorSkeleton() {
 // ============================================================
 // Tabs de modo
 // ============================================================
-type AppMode = "calculadora" | "scanner";
+type AppMode = "calculadora" | "scanner" | "trabalho";
 
 const TABS: Array<{ id: AppMode; label: string; Icon: typeof Calculator }> = [
-  { id: "calculadora", label: "Calculadora", Icon: Calculator },
+  { id: "calculadora", label: "Consumo", Icon: Calculator },
   { id: "scanner", label: "Raio-X NF-e", Icon: ScanLine },
+  { id: "trabalho", label: "Meu Trabalho", Icon: Briefcase },
 ];
 
 // ============================================================
@@ -250,6 +252,9 @@ export function TaxCalculator() {
 
       {/* Modo: Scanner NF-e */}
       {mode === "scanner" && <NfeScanner />}
+
+      {/* Modo: Meu Trabalho */}
+      {mode === "trabalho" && <SalaryDashboard />}
     </div>
   );
 }
