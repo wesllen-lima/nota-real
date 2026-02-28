@@ -60,10 +60,6 @@
 :root {
   --radius: 0.75rem;
 
-  /* Ambient auras — intensidade dinamica via JS (useAmbientAura hook) */
-  --ambient-intensity-red: 0.08;
-  --ambient-intensity-green: 0.08;
-
   --background: #09090b;        /* zinc-950 puro */
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.187 0 0);
@@ -79,7 +75,7 @@
   --accent: oklch(0.2 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 7%);
+  --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 8%);
   --ring: oklch(0.4 0 0);
 
@@ -116,20 +112,16 @@
      com border: 1px solid transparent
      ============================================================ */
   .card-glass {
-    background:
-      oklch(0.187 0 0 / 45%) padding-box,
-      linear-gradient(150deg, oklch(1 0 0 / 5%) 0%, oklch(1 0 0 / 1%) 50%, oklch(1 0 0 / 0%) 100%) border-box;
-    border: 1px solid transparent;
+    background: oklch(0.187 0 0 / 55%);
+    border: 1px solid oklch(1 0 0 / 10%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
   }
 
-  /* Variante para Drawer — fundo mais opaco, sem blur (overlay sobre dashboard) */
+  /* Variante para Drawer — fundo opaco, sem blur (overlay sobre dashboard) */
   .drawer-glass {
-    background:
-      oklch(0.155 0 0 / 98%) padding-box,
-      linear-gradient(150deg, oklch(1 0 0 / 5%) 0%, oklch(1 0 0 / 0%) 100%) border-box;
-    border: 1px solid transparent;
+    background: oklch(0.155 0 0);
+    border: 1px solid oklch(1 0 0 / 8%);
   }
 
   /* Variante menor para chips, badges */
@@ -140,33 +132,6 @@
     border: 1px solid transparent;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-  }
-
-  /* Noise texture overlay — aplicar em div fixa no layout */
-  .noise {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-repeat: repeat;
-    background-size: 256px 256px;
-  }
-
-  /* Ambient Auras — Tax-Red e Citizen-Green nos cantos opostos
-     Opacidade 8% conforme MISSION.md (rgba(239,68,68,0.08) e rgba(16,185,129,0.08))
-     Hex 8% = 14 (20/255 = 7.84%) */
-  .ambient-top-right {
-    background: radial-gradient(
-      ellipse 700px 500px at 85% 0%,
-      rgba(16, 185, 129, var(--ambient-intensity-green)) 0%,
-      transparent 70%
-    );
-    transition: background 0.6s ease;
-  }
-  .ambient-bottom-left {
-    background: radial-gradient(
-      ellipse 600px 500px at 0% 100%,
-      rgba(239, 68, 68, var(--ambient-intensity-red)) 0%,
-      transparent 70%
-    );
-    transition: background 0.6s ease;
   }
 
   /* Input estilo premium */
@@ -239,4 +204,5 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.45; }
   }
+
 }

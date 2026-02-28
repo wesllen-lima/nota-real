@@ -25,15 +25,18 @@ export function BottomNav() {
             type="button"
             onClick={() => handleNav(id)}
             className={clsx(
-              "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors",
+              "relative flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors",
               isActive ? "text-gov-blue" : "text-white/30 hover:text-white/55"
             )}
           >
+            {isActive && (
+              <span className="absolute inset-x-2 inset-y-1 rounded-xl bg-white/[0.06]" />
+            )}
             <Icon
               size={18}
-              className={clsx("transition-colors", isActive ? "text-gov-blue" : "text-white/30")}
+              className={clsx("relative transition-colors", isActive ? "text-gov-blue" : "text-white/30")}
             />
-            {label}
+            <span className="relative">{label}</span>
           </button>
         );
       })}

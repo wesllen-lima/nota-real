@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Share2, Loader2 } from "lucide-react";
-import { exportIndignacaoCard } from "@/lib/export-card";
+import { shareImpact } from "@/lib/export-card";
 
 const BRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -14,15 +14,17 @@ interface IndignacaoCardProps {
 }
 
 export function IndignacaoCard({ totalTaxAmount, laborWorkHours, grossPrice }: IndignacaoCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
-  async function handleExport() {
-    setIsExporting(true);
+  async function handleShare() {
+    setIsSharing(true);
     try {
-      await exportIndignacaoCard(cardRef);
+      const taxRate = grossPrice > 0 ? totalTaxAmount / grossPrice : null;
+      await shareImpact({ totalTaxAmount, taxRate, laborWorkHours, context: "consumo" });
+    } catch {
+      // usuario cancelou o share sheet
     } finally {
-      setIsExporting(false);
+      setIsSharing(false);
     }
   }
 
@@ -30,9 +32,7 @@ export function IndignacaoCard({ totalTaxAmount, laborWorkHours, grossPrice }: I
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Card exportavel — background solido, sem glassmorphism */}
       <div
-        ref={cardRef}
         style={{
           background: "#09090b",
           width: "480px",
@@ -148,18 +148,17 @@ export function IndignacaoCard({ totalTaxAmount, laborWorkHours, grossPrice }: I
         </div>
       </div>
 
-      {/* Botao exportar */}
       <button
-        onClick={handleExport}
-        disabled={isExporting}
+        onClick={handleShare}
+        disabled={isSharing}
         className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.04] py-3 text-[13px] font-medium text-white/60 transition-all hover:bg-white/[0.07] hover:text-white/80 disabled:opacity-40"
       >
-        {isExporting ? (
+        {isSharing ? (
           <Loader2 size={14} className="animate-spin" />
         ) : (
           <Share2 size={14} />
         )}
-        {isExporting ? "Gerando..." : "Compartilhar #NotaReal"}
+        {isSharing ? "Abrindo..." : "Compartilhar #NotaReal"}
       </button>
     </div>
   );

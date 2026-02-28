@@ -42,7 +42,7 @@ export function Drawer({ isOpen, onClose, title, description, children }: Drawer
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/50"
             aria-hidden="true"
           />
 
@@ -67,7 +67,7 @@ export function Drawer({ isOpen, onClose, title, description, children }: Drawer
                 </div>
                 <button
                   onClick={onClose}
-                  className="rounded-lg p-1.5 text-white/25 transition-colors hover:text-white/60"
+                  className="rounded-lg p-2.5 text-white/25 transition-colors hover:text-white/60"
                   aria-label="Fechar"
                 >
                   <X size={16} />
@@ -100,7 +100,7 @@ export function Drawer({ isOpen, onClose, title, description, children }: Drawer
               </div>
               <button
                 onClick={onClose}
-                className="rounded-lg p-1.5 text-white/25 transition-colors hover:text-white/60"
+                className="rounded-lg p-2.5 text-white/25 transition-colors hover:text-white/60"
                 aria-label="Fechar"
               >
                 <X size={16} />

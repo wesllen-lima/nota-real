@@ -8,12 +8,12 @@ import { CguResponseSchema } from "@/types/utility";
 // Fonte: https://www.gov.br/orcamento/pt-br/loa/loa-2026
 // ============================================================
 const LOA_2026 = {
-  totalBi: 5_900,
-  saude: { bi: 211, funcaoCodigo: "10", funcaoNome: "Saude" },
-  educacao: { bi: 152, funcaoCodigo: "12", funcaoNome: "Educacao" },
-  seguranca: { bi: 37, funcaoCodigo: "06", funcaoNome: "Seguranca Publica" },
-  previdencia: { bi: 987, funcaoCodigo: "09", funcaoNome: "Previdencia Social" },
-  assistencia: { bi: 162, funcaoCodigo: "08", funcaoNome: "Assistencia Social" },
+  totalBi: 6_100,                    // PLOA 2026 revisado — SIOP/SOF
+  saude:       { bi: 271.3, funcaoCodigo: "10", funcaoNome: "Saude" },
+  educacao:    { bi: 233.7, funcaoCodigo: "12", funcaoNome: "Educacao" },
+  seguranca:   { bi: 37,   funcaoCodigo: "06", funcaoNome: "Seguranca Publica" },
+  previdencia: { bi: 1_146, funcaoCodigo: "09", funcaoNome: "Previdencia Social" },
+  assistencia: { bi: 168,  funcaoCodigo: "08", funcaoNome: "Assistencia Social" },
   populacaoBrasil: 215_000_000,
 } as const;
 
@@ -30,8 +30,8 @@ export const LOA_PER_CAPITA_MENSAL = {
 // Fontes: FNDE Portaria 6.014/2023, MS SIGTAP 2025, PNLD 2024
 // ============================================================
 export const UNIT_COSTS = {
-  // Merenda escolar PNAE — ensino fundamental integral
-  merendaEscolar: 1.07,
+  // Merenda escolar PNAE — ensino fundamental integral (FNDE portaria 2025)
+  merendaEscolar: 1.57,
   // Consulta ambulatorial SUS (SIGTAP codigo 03.01.01.007-2)
   consultaSus: 10.0,
   // Hora de UTI adulto SUS (SIGTAP — media procedimentos intensivos)
@@ -97,7 +97,7 @@ export function computeSocialImpact(monthlyTaxAmount: number): SocialImpact {
     totalMonthlyTax: monthlyTaxAmount,
     totalAnnualTax: annual,
     equivalences,
-    loaSource: "LOA 2026 — Lei 14.903/2024 · FNDE Portaria 6.014/2023 · SIGTAP/MS 2025",
+    loaSource: "LOA 2026 — PLDO 2026/SIOP · FNDE 2025 · SIGTAP/MS 2025",
   };
 }
 

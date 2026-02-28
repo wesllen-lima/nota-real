@@ -7,35 +7,36 @@ import type {
 } from "@/types/salary";
 
 // ============================================================
-// Tabela INSS Empregado — Progressiva por faixas 2024/2025
-// Fonte: Portaria MPS/MF 9.328/2024
-// Teto de contribuicao: R$ 7.786,02
+// Tabela INSS Empregado — Progressiva por faixas 2026
+// Fonte: Portaria MPS prevista — Salario Minimo R$ 1.621 (scaling x1.148 vs 2025)
+// Teto de contribuicao: R$ 8.940,00
 // ============================================================
 const INSS_BRACKETS: InssBracket[] = [
-  { upTo: 1412.0, rate: 0.075 },
-  { upTo: 2666.68, rate: 0.09 },
-  { upTo: 4000.03, rate: 0.12 },
-  { upTo: 7786.02, rate: 0.14 },
+  { upTo: 1621.0, rate: 0.075 },
+  { upTo: 3063.0, rate: 0.09 },
+  { upTo: 4592.0, rate: 0.12 },
+  { upTo: 8940.0, rate: 0.14 },
   { upTo: null, rate: 0.14 }, // acima do teto: sem incremento
 ];
-const INSS_TETO = 7786.02;
+const INSS_TETO = 8940.0;
 
 // ============================================================
-// Tabela IRPF — 2025/2026 (base Lei 13.149/2015)
+// Tabela IRPF — 2026 (isencao ampliada para R$ 5.000)
 // Formula: imposto = (base × aliquota) - parcela_a_deduzir
+// Faixas reescalonadas ~2.21x em relacao a tabela 2025
 // ============================================================
 const IRPF_BRACKETS: IrpfBracket[] = [
-  { upTo: 2259.2, rate: 0, parcela: 0 },
-  { upTo: 2826.65, rate: 0.075, parcela: 169.44 },
-  { upTo: 3751.05, rate: 0.15, parcela: 381.44 },
-  { upTo: 4664.68, rate: 0.225, parcela: 662.77 },
-  { upTo: null, rate: 0.275, parcela: 896.0 },
+  { upTo: 5000.0,  rate: 0,     parcela: 0      }, // isento — novo 2026
+  { upTo: 6250.0,  rate: 0.075, parcela: 375.0  },
+  { upTo: 8295.0,  rate: 0.15,  parcela: 843.9  },
+  { upTo: 10300.0, rate: 0.225, parcela: 1462.5 },
+  { upTo: null,    rate: 0.275, parcela: 1977.5 },
 ];
 
 // ============================================================
 // Glossario dos encargos patronais para Tooltip didatico
 // ============================================================
-const EMPLOYER_GLOSSARY: Record<string, string> = {
+export const EMPLOYER_GLOSSARY: Record<string, string> = {
   INSS_PATRONAL:
     "Contribuicao previdenciaria paga pela empresa ao INSS sobre cada salario, " +
     "adicional e independente da contribuicao do empregado. " +
@@ -69,12 +70,12 @@ const EMPLOYER_GLOSSARY: Record<string, string> = {
 export const EMPLOYEE_GLOSSARY: Record<"INSS" | "IRPF", string> = {
   INSS:
     "Contribuicao previdenciaria retida diretamente do salario. Calculada progressivamente: " +
-    "7,5% (ate R$ 1.412) ate 14% (acima de R$ 4.000). O teto e R$ 7.786,02 — acima disso, " +
+    "7,5% (ate R$ 1.621 — salario minimo 2026) ate 14% (acima de R$ 4.592). O teto e R$ 8.940,00 — acima disso, " +
     "nao ha incremento. Garante direito a aposentadoria, auxilio-doenca e salario-maternidade.",
   IRPF:
     "Imposto de Renda retido na fonte mensalmente (IRRF). " +
-    "Calculado sobre o salario bruto menos o INSS. Isento ate R$ 2.259,20; " +
-    "aliquota marginal maxima de 27,5% acima de R$ 4.664,68. " +
+    "Calculado sobre o salario bruto menos o INSS. Isento ate R$ 5.000,00 (nova regra 2026); " +
+    "aliquota marginal maxima de 27,5% acima de R$ 10.300,00. " +
     "A aliquota efetiva e sempre inferior a marginal pois as faixas inferiores pagam menos.",
 };
 
@@ -272,3 +273,6 @@ export function computeTaxTrail(totalTaxAmount: number): TaxTrailShare[] {
     amount: Math.round(totalTaxAmount * s.percentage * 100) / 100,
   }));
 }
+
+// Alias estatico exportado para o BudgetThermometer (sem depender de totalTaxImpact > 0)
+export { TAX_TRAIL_DISTRIBUTION as BUDGET_DISTRIBUTION };

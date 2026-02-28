@@ -5,6 +5,9 @@ import type { TaxCalculationResult, ProductCategory, TaxRegime } from "@/types/t
 import type { SalaryBreakdown } from "@/types/salary";
 import type { UtilityTaxResult, UtilityFormInputs } from "@/types/utility";
 import { detectUF } from "@/services/geolocation";
+import { calculateSalaryBreakdown } from "@/lib/salary-engine";
+
+const LS_SALARY_KEY = "nota-real:salary-v1";
 
 export type SectionId = "dashboard" | "consumo" | "trabalho" | "utilidades";
 export type DrawerId = "consumo" | "trabalho" | "utilidades" | null;
@@ -40,6 +43,10 @@ interface AppContextValue {
   // Navegacao Hub & Spoke
   openDrawer: DrawerId;
   setOpenDrawer: (d: DrawerId) => void;
+
+  // Glossario toggle
+  glossaryOpen: boolean;
+  setGlossaryOpen: (open: boolean) => void;
 
   // Compatibilidade retroativa — derivado de openDrawer
   activeSection: SectionId;
@@ -78,6 +85,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppContextProvider({ children }: { children: React.ReactNode }) {
   // Navegacao
   const [openDrawer, setOpenDrawer] = useState<DrawerId>(null);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   // Resultados
   const [taxResult, setTaxResult] = useState<TaxCalculationResult | null>(null);
@@ -89,6 +97,32 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
   const [nfeRawInput, setNfeRawInput] = useState("");
   const [rawSalary, setRawSalary] = useState("");
   const [utilityInputs, setUtilityInputs] = useState<UtilityFormInputs>(INITIAL_UTILITY_INPUTS);
+
+  // Restaurar salario do localStorage no mount
+  useEffect(() => {
+    const stored = localStorage.getItem(LS_SALARY_KEY);
+    if (!stored) return;
+    const n = parseFloat(stored);
+    if (n > 0) {
+      try {
+        setSalaryResult(calculateSalaryBreakdown(n));
+        setRawSalary(
+          n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        );
+      } catch {
+        localStorage.removeItem(LS_SALARY_KEY);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persistir salario quando rawSalary muda
+  useEffect(() => {
+    if (!rawSalary) return;
+    const clean = rawSalary.replace(/R\$\s?/g, "").replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(clean);
+    if (n > 0) localStorage.setItem(LS_SALARY_KEY, n.toString());
+  }, [rawSalary]);
 
   // Geolocation — detecta UF uma unica vez no mount
   const [isDetectingLocation, setIsDetectingLocation] = useState(true);
@@ -135,6 +169,8 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
       value={{
         openDrawer,
         setOpenDrawer,
+        glossaryOpen,
+        setGlossaryOpen,
         activeSection,
         setActiveSection,
         taxResult,
