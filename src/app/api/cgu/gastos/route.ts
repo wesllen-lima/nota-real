@@ -49,21 +49,27 @@ export async function GET() {
       saude: LOA_PER_CAPITA_MENSAL.saude,
       educacao: LOA_PER_CAPITA_MENSAL.educacao,
       seguranca: LOA_PER_CAPITA_MENSAL.seguranca,
+      previdencia: LOA_PER_CAPITA_MENSAL.previdencia,
+      assistencia: LOA_PER_CAPITA_MENSAL.assistencia,
       source: "loa_2026_fallback",
     });
   }
 
   try {
-    const [saude, educacao, seguranca] = await Promise.all([
+    const [saude, educacao, seguranca, previdencia, assistencia] = await Promise.all([
       fetchFuncao("10"),
       fetchFuncao("12"),
       fetchFuncao("06"),
+      fetchFuncao("09"),
+      fetchFuncao("08"),
     ]);
 
     return NextResponse.json({
       saude,
       educacao,
       seguranca,
+      previdencia,
+      assistencia,
       source: "cgu_live",
     });
   } catch {
@@ -71,6 +77,8 @@ export async function GET() {
       saude: LOA_PER_CAPITA_MENSAL.saude,
       educacao: LOA_PER_CAPITA_MENSAL.educacao,
       seguranca: LOA_PER_CAPITA_MENSAL.seguranca,
+      previdencia: LOA_PER_CAPITA_MENSAL.previdencia,
+      assistencia: LOA_PER_CAPITA_MENSAL.assistencia,
       source: "loa_2026_fallback",
     });
   }

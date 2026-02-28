@@ -14,6 +14,8 @@
   --color-tax-red: #ef4444;
   --color-citizen-green: #10b981;
   --color-gov-blue: #3b82f6;
+  --color-teal-test: #14b8a6;      /* IVA 2026 — CBS/IBS */
+  --color-amber-charge: #f59e0b;   /* Utilidades / COSIP */
 
   /* shadcn tokens */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -59,6 +61,20 @@
    ============================================================ */
 :root {
   --radius: 0.75rem;
+
+  /* Escala de border opacity — 4 valores canonicos */
+  --border-faint:   oklch(1 0 0 / 5%);   /* divisores internos */
+  --border-subtle:  oklch(1 0 0 / 8%);   /* cards e inputs */
+  --border-default: oklch(1 0 0 / 10%);  /* card-glass */
+  --border-strong:  oklch(1 0 0 / 14%);  /* foco, hover */
+
+  /* Duracoes de animacao */
+  --duration-quick: 0.2s;
+  --duration-base:  0.35s;
+  --duration-slow:  0.55s;
+
+  /* Easing padrao do projeto */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   --background: #09090b;        /* zinc-950 puro */
   --foreground: oklch(0.985 0 0);
@@ -106,6 +122,23 @@
 }
 
 @layer utilities {
+  /* ============================================================
+     Tooltip glass — elimina inline styles duplicados
+     ============================================================ */
+  .tooltip-glass {
+    background:
+      oklch(0.187 0 0 / 97%) padding-box,
+      linear-gradient(135deg, oklch(1 0 0 / 10%) 0%, oklch(1 0 0 / 3%) 100%) border-box;
+    border: 1px solid transparent;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Glow teal — IVA 2026 */
+  .glow-teal {
+    text-shadow: 0 0 24px color-mix(in oklch, #14b8a6 35%, transparent);
+  }
+
   /* ============================================================
      Card glass — gradient border via dual background-clip
      Tecnica: padding-box (background) + border-box (gradient)

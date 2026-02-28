@@ -19,10 +19,11 @@ const LOA_2026 = {
 
 // Per capita mensal estimado (LOA 2026 / populacao brasileira)
 export const LOA_PER_CAPITA_MENSAL = {
-  saude: (LOA_2026.saude.bi * 1e9) / LOA_2026.populacaoBrasil / 12,
-  educacao: (LOA_2026.educacao.bi * 1e9) / LOA_2026.populacaoBrasil / 12,
-  seguranca: (LOA_2026.seguranca.bi * 1e9) / LOA_2026.populacaoBrasil / 12,
+  saude:       (LOA_2026.saude.bi       * 1e9) / LOA_2026.populacaoBrasil / 12,
+  educacao:    (LOA_2026.educacao.bi    * 1e9) / LOA_2026.populacaoBrasil / 12,
+  seguranca:   (LOA_2026.seguranca.bi   * 1e9) / LOA_2026.populacaoBrasil / 12,
   previdencia: (LOA_2026.previdencia.bi * 1e9) / LOA_2026.populacaoBrasil / 12,
+  assistencia: (LOA_2026.assistencia.bi * 1e9) / LOA_2026.populacaoBrasil / 12,
 } as const;
 
 // ============================================================
@@ -105,9 +106,11 @@ export function computeSocialImpact(monthlyTaxAmount: number): SocialImpact {
 // Busca gastos via API route (proxy CGU) — com fallback LOA 2026
 // ============================================================
 const GastosApiResponseSchema = z.object({
-  saude: z.number(),
-  educacao: z.number(),
-  seguranca: z.number(),
+  saude:       z.number(),
+  educacao:    z.number(),
+  seguranca:   z.number(),
+  previdencia: z.number(),
+  assistencia: z.number(),
   source: z.enum(["cgu_live", "loa_2026_fallback"]),
 });
 export type GastosApiResponse = z.infer<typeof GastosApiResponseSchema>;
@@ -123,9 +126,11 @@ export async function fetchGastosPublicos(): Promise<GastosApiResponse> {
   } catch {
     // Fallback para dados LOA 2026 estaticos
     return {
-      saude: LOA_PER_CAPITA_MENSAL.saude,
-      educacao: LOA_PER_CAPITA_MENSAL.educacao,
-      seguranca: LOA_PER_CAPITA_MENSAL.seguranca,
+      saude:       LOA_PER_CAPITA_MENSAL.saude,
+      educacao:    LOA_PER_CAPITA_MENSAL.educacao,
+      seguranca:   LOA_PER_CAPITA_MENSAL.seguranca,
+      previdencia: LOA_PER_CAPITA_MENSAL.previdencia,
+      assistencia: LOA_PER_CAPITA_MENSAL.assistencia,
       source: "loa_2026_fallback",
     };
   }

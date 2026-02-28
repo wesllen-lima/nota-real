@@ -6,31 +6,7 @@ import type {
   UtilityTaxRates,
   UtilityTaxResult,
 } from "@/types/utility";
-
-// ============================================================
-// Aliquotas de ICMS por UF — Energia Eletrica (residencial 2025/2026)
-// Fontes: CONFAZ, Decretos estaduais
-// ============================================================
-const ICMS_ENERGIA_BY_UF: Record<string, number> = {
-  AC: 0.17, AL: 0.25, AP: 0.18, AM: 0.25, BA: 0.25,
-  CE: 0.22, DF: 0.25, ES: 0.25, GO: 0.25, MA: 0.22,
-  MT: 0.25, MS: 0.17, MG: 0.25, PA: 0.25, PB: 0.25,
-  PR: 0.29, PE: 0.25, PI: 0.25, RJ: 0.18, RN: 0.25,
-  RS: 0.30, RO: 0.25, RR: 0.25, SC: 0.25, SP: 0.12,
-  SE: 0.25, TO: 0.25,
-};
-
-// Rondonia: Decreto 21.959/2017 — 25% residencial
-// SP: reducao para 12% (Lei 17.787/2023)
-
-const ICMS_AGUA_BY_UF: Record<string, number> = {
-  // Maioria dos estados isenta ou reduz ICMS para saneamento
-  // Rondonia: Decreto 12.051/2006 — isencao para saneamento basico
-  RO: 0.0,  SP: 0.12, RJ: 0.12, MG: 0.0,  RS: 0.12,
-  PR: 0.12, BA: 0.17, PE: 0.17, CE: 0.12, GO: 0.12,
-  // Demais: media nacional
-  _default: 0.12,
-};
+import { ICMS_ENERGIA_BY_UF, ICMS_AGUA_BY_UF } from "@/config/icms-by-uf";
 
 // PIS/COFINS energia — distribuidoras (regime nao-cumulativo, ANEEL 2025)
 const PIS_COFINS_ENERGIA: UtilityTaxRates = {

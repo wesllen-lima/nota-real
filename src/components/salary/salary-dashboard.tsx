@@ -21,13 +21,6 @@ const BRL = (v: number) =>
 const PCT = (v: number) =>
   `${(v * 100).toFixed(1)}%`;
 
-const TOOLTIP_STYLE = {
-  background:
-    "oklch(0.187 0 0 / 97%) padding-box, linear-gradient(135deg, oklch(1 0 0 / 9%) 0%, oklch(1 0 0 / 0%) 100%) border-box",
-  border: "1px solid transparent",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-};
 
 // ============================================================
 // Tooltip padrao para encargos
@@ -46,8 +39,7 @@ function ChargeTooltip({
         <Tooltip.Content
           side="top"
           sideOffset={8}
-          className="z-50 max-w-[280px] rounded-xl p-4 shadow-2xl"
-          style={TOOLTIP_STYLE}
+          className="tooltip-glass z-50 max-w-[280px] rounded-xl p-4 shadow-2xl"
         >
           <p className="text-[11px] leading-relaxed text-white/55">{description}</p>
           <Tooltip.Arrow style={{ fill: "#18181b" }} />
@@ -81,7 +73,7 @@ function BarCustomTooltip({
   };
 
   return (
-    <div className="rounded-xl p-3 shadow-2xl" style={TOOLTIP_STYLE}>
+    <div className="tooltip-glass rounded-xl p-3 shadow-2xl">
       {payload.map((item) =>
         item.value > 0 ? (
           <div

@@ -21,7 +21,9 @@ export async function shareImpact(data: ShareImpactData): Promise<"shared" | "co
     return "shared";
   }
 
-  await navigator.clipboard.writeText(text);
+  if (typeof navigator !== "undefined") {
+    await (navigator as Navigator).clipboard.writeText(text);
+  }
   return "copied";
 }
 

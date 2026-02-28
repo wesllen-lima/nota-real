@@ -56,8 +56,8 @@ function AnimatedCurrency({
     prevRef.current = value;
     const fmt = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
     const controls = animate(from, value, {
-      duration: 0.75,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      duration: 0.55,
+      ease: [0.16, 1, 0.3, 1],
       onUpdate(v) {
         if (ref.current) ref.current.textContent = fmt.format(v);
       },
@@ -104,9 +104,9 @@ function HeroNumber() {
     <div className="pt-2 pb-4">
       <div>
         {salaryResult && (
-          <p className="mb-2 text-[10px] text-zinc-500">
+          <p className="mb-2 text-[10px] text-white/40">
             Renda declarada:{" "}
-            <span className="font-mono font-semibold text-zinc-400">
+            <span className="font-mono font-semibold text-white/60">
               {BRL(salaryResult.grossSalary)}
             </span>
           </p>
@@ -122,7 +122,7 @@ function HeroNumber() {
               className="mt-2 flex items-start gap-3"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             >
               <AnimatedCurrency
                 value={totalTaxImpact}
@@ -168,14 +168,7 @@ function HeroNumber() {
             )}
             {/* #5 — badge de delta 2026 */}
             {delta2026 !== null && delta2026 > 0 && (
-              <span
-                className="rounded-full border px-2 py-0.5 text-[10px] font-medium"
-                style={{
-                  color: "#14B8A6",
-                  borderColor: "#14B8A625",
-                  background: "#14B8A608",
-                }}
-              >
+              <span className="rounded-full border border-teal-400/15 bg-teal-400/[0.031] px-2 py-0.5 text-[10px] font-medium text-teal-400">
                 +{BRL(delta2026)} com IVA 2026
               </span>
             )}
@@ -222,7 +215,7 @@ const StatCard = memo(function StatCard({
       <motion.div
         layout
         layoutId={layoutId}
-        className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4 select-none"
+        className="flex flex-col gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.025] p-4 select-none"
         aria-hidden="true"
       >
         <div className="flex items-center gap-2">
@@ -254,7 +247,7 @@ const StatCard = memo(function StatCard({
       </div>
       {sub && <p className="text-[11px] text-white/40">{sub}</p>}
       {lines && lines.length > 0 && (
-        <div className="mt-2 flex flex-col gap-1 border-t border-white/[0.06] pt-2">
+        <div className="mt-2 flex flex-col gap-1 border-t border-white/[0.05] pt-2">
           {lines.map((line) => (
             <div key={line.label} className="flex items-center justify-between gap-2">
               <span className="text-[10px] text-white/45">{line.label}</span>
@@ -302,7 +295,7 @@ function BudgetThermometer({ totalTaxImpact }: { totalTaxImpact: number }) {
         </div>
         <div className="group relative shrink-0">
           <Info size={12} className="cursor-help text-white/35 hover:text-white/55" />
-          <div className="pointer-events-none absolute right-0 top-5 z-10 w-60 rounded-xl border border-white/[0.07] bg-zinc-900 p-3 text-[11px] text-white/50 opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
+          <div className="pointer-events-none absolute right-0 top-5 z-10 w-60 rounded-xl border border-white/[0.08] bg-zinc-900 p-3 text-[11px] text-white/50 opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
             Distribuicao estimada da arrecadacao federal (STN/SOF 2024). Valores variam
             conforme composicao do tributo.
           </div>
@@ -311,8 +304,8 @@ function BudgetThermometer({ totalTaxImpact }: { totalTaxImpact: number }) {
 
       <div className="flex flex-col gap-1.5">
         <div className="flex h-5 overflow-hidden rounded-full">
-          <div style={{ width: `${stateCostPct}%`, background: "#EF444450" }} />
-          <div style={{ width: `${returnPct}%`, background: "#10B981" }} />
+          <div className="bg-tax-red/30" style={{ width: `${stateCostPct}%` }} />
+          <div className="bg-citizen-green" style={{ width: `${returnPct}%` }} />
         </div>
         <div className="flex justify-between">
           <span className="text-[10px] font-medium text-tax-red/70">
@@ -344,10 +337,7 @@ function BudgetThermometer({ totalTaxImpact }: { totalTaxImpact: number }) {
         })}
       </div>
 
-      <div
-        className="rounded-xl px-3 py-2.5"
-        style={{ background: "#EF444412", border: "1px solid #EF444428" }}
-      >
+      <div className="rounded-xl border border-tax-red/15 bg-tax-red/[0.07] px-3 py-2.5">
         <p className="text-[10px] leading-relaxed text-white/35">
           Para cada{" "}
           <span className="font-mono font-bold text-white/50">
@@ -421,8 +411,8 @@ function TaxFreedomDayCard({ salaryResult }: { salaryResult: SalaryBreakdown | n
 
       <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/[0.08]">
         <div
-          className="h-full rounded-full"
-          style={{ width: `${Math.min(taxRate * 100, 100)}%`, background: "#EF444455" }}
+          className="h-full rounded-full bg-tax-red/33"
+          style={{ width: `${Math.min(taxRate * 100, 100)}%` }}
         />
       </div>
     </div>
@@ -443,7 +433,7 @@ function SalaryFunnel() {
       transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="flex flex-col"
     >
-      <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] py-3">
+      <div className="flex items-center justify-between gap-4 border-b border-white/[0.05] py-3">
         <div className="flex flex-col gap-0.5">
           <p className="text-[11px] font-medium text-white/55">Custo Total da Empresa</p>
           <p className="text-[10px] text-white/35">O que seu trabalho custa para o empregador.</p>
@@ -453,7 +443,7 @@ function SalaryFunnel() {
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] py-3">
+      <div className="flex items-center justify-between gap-4 border-b border-white/[0.05] py-3">
         <div className="flex flex-col gap-0.5">
           <p className="text-[11px] font-medium text-tax-red/80">− Socio Oculto</p>
           <p className="text-[10px] text-white/35">Encargos patronais + descontos no holerite.</p>
@@ -517,7 +507,7 @@ function SalaryIllusionExplainer() {
               onClick={() => setOpen(isOpen ? null : step.n)}
               className="flex w-full items-center gap-3 py-2 text-left"
             >
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/[0.12] font-mono text-[10px] font-bold text-white/45">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/[0.10] font-mono text-[10px] font-bold text-white/45">
                 {step.n}
               </span>
               <span className="flex-1 text-[12px] font-medium text-white/65">{step.title}</span>
@@ -534,7 +524,7 @@ function SalaryIllusionExplainer() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.18, ease: "easeInOut" }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
                   className="overflow-hidden"
                 >
                   <p className="pb-3 pl-8 text-[11px] leading-relaxed text-white/55">
@@ -615,7 +605,7 @@ export function DashboardSection() {
               lines={taxResult?.breakdown.map((b) => ({
                 label: b.code,
                 value: BRL(b.amountPaid),
-                color: b.layer === "iva_teste" ? "#14B8A6" : "#EF444490",
+                color: b.layer === "iva_teste" ? "#14b8a6" : "#EF444490",
               }))}
             />
             <StatCard
@@ -682,7 +672,7 @@ export function DashboardSection() {
         <button
           type="button"
           onClick={handleShare}
-          className="flex items-center gap-2 self-end rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-[11px] text-white/40 transition-all hover:border-white/12 hover:bg-white/[0.04] hover:text-white/60"
+          className="flex items-center gap-2 self-end rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2 text-[11px] text-white/40 transition-all hover:border-white/12 hover:bg-white/[0.04] hover:text-white/60"
         >
           <Share2 size={12} className="shrink-0" />
           Compartilhar

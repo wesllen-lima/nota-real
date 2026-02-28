@@ -14,6 +14,13 @@ export interface IrpfBracket {
   parcela: number;
 }
 
+export interface IrpfReduction {
+  zeroThreshold: number;
+  maxIncome: number;
+  constant: number;
+  factor: number;
+}
+
 export type EmployerChargeLevel = "federal" | "social" | "trabalhista";
 
 export interface EmployerCharge {

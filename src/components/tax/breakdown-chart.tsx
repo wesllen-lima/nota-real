@@ -54,15 +54,7 @@ function CustomTooltip({
   if (!active || !payload?.length) return null;
   const s = payload[0].payload;
   return (
-    <div
-      className="max-w-[220px] rounded-xl p-3 shadow-2xl"
-      style={{
-        background:
-          "oklch(0.187 0 0 / 97%) padding-box, linear-gradient(135deg, oklch(1 0 0 / 8%) 0%, oklch(1 0 0 / 0%) 100%) border-box",
-        border: "1px solid transparent",
-        backdropFilter: "blur(16px)",
-      }}
-    >
+    <div className="tooltip-glass max-w-[220px] rounded-xl p-3 shadow-2xl">
       <div className="flex items-center gap-2">
         <span
           className="h-2 w-2 flex-shrink-0 rounded-full"

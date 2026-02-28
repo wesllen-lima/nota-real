@@ -21,13 +21,6 @@ const LEVEL_LABEL: Record<string, string> = {
 // Items IVA teste sempre recebem teal
 const IVA_COLOR = "#14B8A6";
 
-const TOOLTIP_STYLE = {
-  background:
-    "oklch(0.187 0 0 / 97%) padding-box, linear-gradient(135deg, oklch(1 0 0 / 9%) 0%, oklch(1 0 0 / 0%) 100%) border-box",
-  border: "1px solid transparent",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-};
 
 interface Props {
   breakdown: TaxBreakdown[];
@@ -73,8 +66,7 @@ function TaxRow({
               <Tooltip.Content
                 side="top"
                 sideOffset={8}
-                className="z-50 max-w-[280px] rounded-xl p-4 shadow-2xl"
-                style={TOOLTIP_STYLE}
+                className="tooltip-glass z-50 max-w-[280px] rounded-xl p-4 shadow-2xl"
               >
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-white/30">
                   {isIva ? "IVA Dual — Fase de Teste 2026" : LEVEL_LABEL[tax.governmentLevel]}
