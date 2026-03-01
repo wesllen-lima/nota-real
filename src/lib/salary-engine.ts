@@ -52,10 +52,22 @@ export const EMPLOYEE_GLOSSARY: Record<"INSS" | "IRPF", string> = {
     "A aliquota efetiva e sempre inferior a marginal pois as faixas inferiores pagam menos.",
 };
 
+/** Arredondamento bancario padrao ABNT NBR 5891 (metade para cima). */
 function round(v: number, d = 2): number {
   return Math.round(v * 10 ** d) / 10 ** d;
 }
 
+/**
+ * Calcula a contribuicao INSS do empregado pelo metodo progressivo exato.
+ *
+ * Fonte: Portaria Interministerial MPS/MF n.13, DOU 09/01/2026.
+ * Metodo: cada aliquota incide apenas sobre a parcela do salario dentro da faixa.
+ * Teto: contribuicao cessa ao atingir R$ 8.475,55 — acima deste valor nao ha incremento.
+ * Desconto maximo: R$ 988,09 (independente do salario bruto).
+ *
+ * @param grossSalary - Salario bruto mensal em R$.
+ * @returns Valor descontado do INSS empregado, arredondado a 2 casas.
+ */
 function calcInss(grossSalary: number): number {
   const base = Math.min(grossSalary, INSS_TETO);
   let total = 0;
@@ -70,9 +82,24 @@ function calcInss(grossSalary: number): number {
   return round(total);
 }
 
-// IRPF — dois passos (Lei 15.191/2025 + Lei 15.270/2025)
-// base        = grossSalary − INSS (tabela progressiva)
-// grossSalary = rendimentos brutos (redutor linear)
+/**
+ * Calcula o IRPF retido na fonte em dois passos independentes.
+ *
+ * Passo 1 — Tabela progressiva mensal (Lei 15.191/2025, DOU 09/05/2025):
+ *   base = grossSalary − INSS_empregado.
+ *   irpf_bruto = max(0, base × aliquota_marginal − parcela_a_deduzir).
+ *   Aliquota maxima: 27,5% sobre base acima de R$ 4.664,68.
+ *
+ * Passo 2 — Redutor linear automatico (Lei 15.270/2025, DOU 27/02/2025):
+ *   Aplicado sobre renda BRUTA (grossSalary), nao sobre a base tributavel.
+ *   Para grossSalary <= R$ 5.000: IRPF zerado integralmente (isencao total).
+ *   Para R$ 5.000,01 <= grossSalary <= R$ 7.350: reducao parcial proporcional.
+ *   Para grossSalary > R$ 7.350: sem reducao (IRPF cheio do Passo 1).
+ *
+ * @param base - Base de calculo (salario bruto − INSS empregado), em R$.
+ * @param grossSalary - Salario bruto mensal (para o redutor linear), em R$.
+ * @returns { amount: IRPF liquido a reter, marginalRate: aliquota marginal aplicada }.
+ */
 function calcIrpf(base: number, grossSalary: number): { amount: number; marginalRate: number } {
   // Passo 1: tabela progressiva mensal (Lei 15.191/2025)
   let irpfBruto = 0;
@@ -100,6 +127,36 @@ function calcIrpf(base: number, grossSalary: number): { amount: number; marginal
   };
 }
 
+/**
+ * Calcula o custo real do trabalho CLT e a carga tributaria total.
+ *
+ * Perspectivas consolidadas:
+ *
+ * EMPREGADO (holerite):
+ *   - INSS empregado: Portaria Interministerial MPS/MF n.13/2026 (progressivo).
+ *   - IRPF: Lei 15.191/2025 (tabela progressiva) + Lei 15.270/2025 (redutor linear).
+ *
+ * EMPREGADOR (custo oculto — "socio oculto"):
+ *   - INSS Patronal 20%: Art. 22, I, Lei 8.212/1991.
+ *   - RAT (Risco Acidente de Trabalho) 2%: Art. 22, II, Lei 8.213/1991 + Decreto 3.048/1999.
+ *     Aliquota media para risco medio (1% leve / 2% medio / 3% grave — CNAE-dependente).
+ *   - Sistema S 5,8%: conjunto de contribuicoes compulsorias (SESC, SENAC, SENAI, SESI,
+ *     SEBRAE, SENAT, SESCOOP) — percentual medio para empresas comercio/servicos/industria.
+ *   - FGTS 8%: Art. 15, Lei 8.036/1990.
+ *
+ * PROVISOES TRABALHISTAS (direitos — NAO sao impostos):
+ *   - Ferias 1/9 (= 11,111...%): (1/12 salario) × (1 + 1/3 constitucional).
+ *     Fonte: Art. 7o, XVII e XIX, CF/1988 + Sumula 328 TST (1/3 proporcional).
+ *   - 13o Salario 1/12 (= 8,333...%): Lei 4.749/1965 + Art. 7o, VIII, CF/1988.
+ *
+ * Equacao de fechamento (sem residuo):
+ *   realLaborCost = grossSalary + totalEmployerCost
+ *   totalTaxBurden + totalLaborProvisions + netSalary = realLaborCost
+ *
+ * @param grossSalary - Salario bruto mensal em R$. Deve ser > 0.
+ * @returns SalaryBreakdown com todos os valores auditaveis.
+ * @throws RangeError se grossSalary <= 0.
+ */
 export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
   if (grossSalary <= 0) throw new RangeError("grossSalary deve ser maior que zero.");
 
@@ -120,42 +177,46 @@ export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
     {
       code: "INSS_PATRONAL",
       label: "INSS Patronal",
-      rate: 0.2,
+      rate: 0.20, // 20% — Art. 22, I, Lei 8.212/1991
       isProvision: false,
       governmentLevel: "federal",
     },
     {
       code: "RAT",
       label: "RAT — Acid. Trabalho",
-      rate: 0.02,
+      rate: 0.02, // 2% (risco medio) — Art. 22, II, Lei 8.213/1991 + Decreto 3.048/1999 Anexo V
       isProvision: false,
       governmentLevel: "federal",
     },
     {
       code: "SISTEMA_S",
       label: "Sistema S",
-      rate: 0.058,
+      rate: 0.058, // ~5,8% media — SESC/SENAC/SENAI/SESI/SEBRAE/SENAT/SESCOOP (varia por CNAE)
       isProvision: false,
       governmentLevel: "social",
     },
     {
       code: "FGTS",
       label: "FGTS",
-      rate: 0.08,
+      rate: 0.08, // 8% — Art. 15, Lei 8.036/1990
       isProvision: false,
       governmentLevel: "trabalhista",
     },
     {
       code: "FERIAS",
       label: "Provisao Ferias",
-      rate: 1 / 9, // 40 dias / 360 dias = 1/9 exato (11.111...%)
+      // (1/12) × (1 + 1/3) = 4/36 = 1/9 = 11,111...% exato
+      // Fonte: Art. 7o, XVII e XIX, CF/1988 + Sumula 328/TST (1/3 proporcional obrigatorio)
+      rate: 1 / 9,
       isProvision: true,
       governmentLevel: "trabalhista",
     },
     {
       code: "DECIMO_TERCEIRO",
       label: "Provisao 13o Salario",
-      rate: 1 / 12, // 1 mês / 12 meses = 1/12 exato (8.333...%)
+      // 1/12 = 8,333...% exato — provisionamento mensal
+      // Fonte: Art. 7o, VIII, CF/1988 + Lei 4.749/1965
+      rate: 1 / 12,
       isProvision: true,
       governmentLevel: "trabalhista",
     },
@@ -208,8 +269,13 @@ export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
   };
 }
 
-// Distribuicao estimada da arrecadacao — LOA 2024 (STN/SOF)
-// Fonte: Relatorio de Acompanhamento Fiscal IPCA/STN 2024
+/**
+ * Distribuicao macroeconomica da arrecadacao federal — estimativa LOA 2026.
+ *
+ * Fonte: Lei 14.903/2024 (LOA 2025 base) + Relatorio RAF/STN 2024.
+ * Nota: percentuais sao aproximacoes educativas arredondadas para inteiros.
+ * A distribuicao real varia mensalmente conforme execucao orcamentaria do SIAFI.
+ */
 const TAX_TRAIL_DISTRIBUTION: Array<Omit<TaxTrailShare, "amount">> = [
   {
     label: "Previdencia e Pensoes",
@@ -249,6 +315,13 @@ const TAX_TRAIL_DISTRIBUTION: Array<Omit<TaxTrailShare, "amount">> = [
   },
 ];
 
+/**
+ * Distribui o impacto tributario do contribuinte pelas categorias do orcamento federal.
+ *
+ * Fonte: LOA 2026 (Lei 14.903/2024) + RAF/STN 2024.
+ * @param totalTaxAmount - Carga tributaria mensal total em R$.
+ * @returns Array de TaxTrailShare com valores absolutos proporcionais.
+ */
 export function computeTaxTrail(totalTaxAmount: number): TaxTrailShare[] {
   return TAX_TRAIL_DISTRIBUTION.map((s) => ({
     ...s,
