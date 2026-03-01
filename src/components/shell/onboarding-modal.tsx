@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateSalaryBreakdown } from "@/lib/salary-engine";
 import { useAppContext } from "@/context/impact-context";
 import { toast } from "@/hooks/use-toast";
+import { BRL } from "@/lib/utils";
 
 type Regime = "CLT" | "MEI" | "PJ";
 
@@ -22,26 +23,28 @@ function parseBRL(input: string): number {
 }
 
 export function OnboardingModal() {
-  const { setSalaryResult, setRawSalary, hasAnyResult } = useAppContext();
-  const [dismissed, setDismissed] = useState(false);
+  const { setSalaryResult, setRawSalary, salaryResult, setWorkRegime, consumoInputs, isDetectingLocation } = useAppContext();
   const [regime, setRegime] = useState<Regime>("CLT");
   const [salaryInput, setSalaryInput] = useState("");
   const [error, setError] = useState("");
 
-  const open = !hasAnyResult && !dismissed;
+  const open = salaryResult === null;
 
   function handleConfirm() {
     const salary = parseBRL(salaryInput);
-    if (!salary || salary <= 0 || salary > 1_000_000) {
+    if (!salary || salary <= 0) {
       setError("Informe uma renda mensal valida (ex: 5.000,00)");
+      return;
+    }
+    if (salary > 9_999_999) {
+      setError("Valor excede o limite de processamento (R$ 9.999.999,00)");
       return;
     }
     try {
       const result = calculateSalaryBreakdown(salary);
       setSalaryResult(result);
       setRawSalary(salaryInput);
-      const BRL = (v: number) =>
-        new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+      setWorkRegime(regime);
       toast(`Socio oculto revelado — ${BRL(result.totalTaxBurden)} em encargos/mes`);
     } catch {
       setError("Valor invalido. Tente novamente.");
@@ -57,19 +60,14 @@ export function OnboardingModal() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-          style={{
-            background: "rgba(9,9,11,0.88)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-          }}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/92 p-4 sm:items-center"
         >
           <motion.div
             initial={{ opacity: 0, y: 32, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="card-glass w-full max-w-md rounded-3xl p-7 sm:p-9"
+            className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950 p-7 shadow-2xl sm:p-9"
           >
             {/* Header */}
             <div className="mb-7">
@@ -82,6 +80,18 @@ export function OnboardingModal() {
               <p className="mt-2 text-[12px] leading-relaxed text-white/35">
                 Uma pergunta. O Estado ja sabe a resposta. Agora voce tambem vai saber.
               </p>
+              {/* Chip de geolocalização — lê estado detectado do contexto */}
+              {isDetectingLocation ? (
+                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/[0.07] bg-white/[0.03] px-2.5 py-1 text-[10px] text-white/35">
+                  <span className="h-[5px] w-[5px] animate-pulse rounded-full bg-white/30" />
+                  Detectando estado...
+                </span>
+              ) : consumoInputs.uf ? (
+                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-citizen-green/20 bg-citizen-green/[0.06] px-2.5 py-1 text-[10px] font-medium text-citizen-green">
+                  <span className="h-[5px] w-[5px] rounded-full bg-citizen-green" />
+                  {consumoInputs.uf} detectado — ICMS regional via IBPT
+                </span>
+              ) : null}
             </div>
 
             {/* Regime selector */}
@@ -112,10 +122,14 @@ export function OnboardingModal() {
 
             {/* Salary input */}
             <div className="mb-6">
-              <label className="mb-2 block text-[10px] font-medium uppercase tracking-[0.13em] text-white/35">
+              <label
+                htmlFor="onboarding-salary"
+                className="mb-2 block text-[10px] font-medium uppercase tracking-[0.13em] text-white/35"
+              >
                 Renda Mensal Bruta
               </label>
               <input
+                id="onboarding-salary"
                 type="text"
                 inputMode="numeric"
                 placeholder="R$ 5.000,00"
@@ -151,16 +165,9 @@ export function OnboardingModal() {
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="flex-1 rounded-2xl bg-white py-3.5 text-[13px] font-bold text-zinc-950 transition-all hover:bg-white/90 active:scale-[0.98]"
+                className="flex-1 rounded-2xl bg-white py-3.5 text-[13px] font-bold text-zinc-950 transition-all hover:bg-white/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
               >
                 Revelar o Socio Oculto
-              </button>
-              <button
-                type="button"
-                onClick={() => setDismissed(true)}
-                className="rounded-2xl px-4 py-3.5 text-[12px] text-white/35 transition-colors hover:text-white/55"
-              >
-                Pular
               </button>
             </div>
           </motion.div>

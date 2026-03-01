@@ -175,7 +175,7 @@ function GlossarySection({ title, entries, openKey, onToggle }: GlossarySectionP
             <button
               type="button"
               onClick={() => onToggle(entry.key)}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.03] active:bg-white/[0.05]"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.03] active:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/15"
             >
               <span
                 className="mt-[1px] h-[6px] w-[6px] shrink-0 rounded-full"
@@ -225,14 +225,11 @@ function GlossarySection({ title, entries, openKey, onToggle }: GlossarySectionP
 }
 
 export function TaxGlossarySidebar() {
-  const { glossaryOpen } = useAppContext();
   const [openKey, setOpenKey] = useState<string | null>(null);
 
   function handleToggle(key: string) {
     setOpenKey((prev) => (prev === key ? null : key));
   }
-
-  if (!glossaryOpen) return null;
 
   return (
     <aside className="fixed inset-y-0 right-0 z-40 hidden w-[320px] flex-col border-l border-white/[0.09] bg-zinc-950 md:flex">

@@ -9,9 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { UtilityTaxResult } from "@/types/utility";
-
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+import { BRL } from "@/lib/utils";
 
 const TOOLTIP_STYLE = {
   background:

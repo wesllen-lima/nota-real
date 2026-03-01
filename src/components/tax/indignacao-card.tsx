@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { Share2, Loader2 } from "lucide-react";
 import { shareImpact } from "@/lib/export-card";
-
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+import { BRL } from "@/lib/utils";
 
 interface IndignacaoCardProps {
   totalTaxAmount: number;

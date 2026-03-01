@@ -1,5 +1,5 @@
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+import { toPng } from "html-to-image";
+import { BRL } from "@/lib/utils";
 
 export interface ShareImpactData {
   totalTaxAmount: number;
@@ -8,11 +8,6 @@ export interface ShareImpactData {
   context?: "dashboard" | "consumo";
 }
 
-/**
- * Compartilha o impacto fiscal via Web Share API (mobile-native).
- * Fallback: copia o texto para o clipboard.
- * Retorna "shared" | "copied" para feedback no toast.
- */
 export async function shareImpact(data: ShareImpactData): Promise<"shared" | "copied"> {
   const text = buildShareText(data);
 
@@ -25,6 +20,30 @@ export async function shareImpact(data: ShareImpactData): Promise<"shared" | "co
     await (navigator as Navigator).clipboard.writeText(text);
   }
   return "copied";
+}
+
+export async function exportFunnelImage(node: HTMLElement): Promise<void> {
+  const dataUrl = await toPng(node, {
+    backgroundColor: "#09090b",
+    pixelRatio: 2,
+  });
+
+  const blob = await (await fetch(dataUrl)).blob();
+  const file = new File([blob], "extrato-nota-real.png", { type: "image/png" });
+
+  if (
+    typeof navigator !== "undefined" &&
+    "share" in navigator &&
+    navigator.canShare?.({ files: [file] })
+  ) {
+    await navigator.share({ files: [file], title: "Extrato Nota Real" });
+    return;
+  }
+
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = "extrato-nota-real.png";
+  link.click();
 }
 
 function buildShareText({

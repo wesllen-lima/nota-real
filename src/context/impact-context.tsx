@@ -7,14 +7,13 @@ import type { UtilityTaxResult, UtilityFormInputs } from "@/types/utility";
 import { detectUF } from "@/services/geolocation";
 import { calculateSalaryBreakdown } from "@/lib/salary-engine";
 
-const LS_SALARY_KEY = "nota-real:salary-v1";
+const LS_SALARY_KEY  = "nota-real:salary-v1";
+const LS_REGIME_KEY  = "nota-real:regime-v1";
 
-export type SectionId = "dashboard" | "consumo" | "trabalho" | "utilidades";
-export type DrawerId = "consumo" | "trabalho" | "utilidades" | null;
+export type WorkRegime = "CLT" | "MEI" | "PJ";
+export type SectionId  = "dashboard" | "consumo" | "trabalho" | "utilidades";
+export type DrawerId   = "consumo" | "trabalho" | "utilidades" | null;
 
-// ============================================================
-// Estado de formulario da secao Consumo (persistido no context)
-// ============================================================
 export interface CalculatorInputState {
   grossPriceRaw: string;
   productCategory: ProductCategory;
@@ -36,21 +35,17 @@ const INITIAL_UTILITY_INPUTS: UtilityFormInputs = {
   regime: "atual",
 };
 
-// ============================================================
-// Interface do context
-// ============================================================
 interface AppContextValue {
   // Navegacao Hub & Spoke
   openDrawer: DrawerId;
   setOpenDrawer: (d: DrawerId) => void;
 
-  // Glossario toggle
-  glossaryOpen: boolean;
-  setGlossaryOpen: (open: boolean) => void;
-
-  // Compatibilidade retroativa — derivado de openDrawer
   activeSection: SectionId;
   setActiveSection: (s: SectionId) => void;
+
+  // Regime de trabalho capturado no onboarding
+  workRegime: WorkRegime | null;
+  setWorkRegime: (r: WorkRegime) => void;
 
   // Resultados calculados
   taxResult: TaxCalculationResult | null;
@@ -59,6 +54,10 @@ interface AppContextValue {
   setTaxResult: (r: TaxCalculationResult | null) => void;
   setSalaryResult: (r: SalaryBreakdown | null) => void;
   setUtilityResult: (r: UtilityTaxResult | null) => void;
+
+  /** Impostos reais lidos de NF-e/NFC-e via XML ou QR scrape */
+  nfeTaxAmount: number | null;
+  setNfeTaxAmount: (v: number | null) => void;
 
   // Derivados
   hasAnyResult: boolean;
@@ -83,23 +82,25 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppContextProvider({ children }: { children: React.ReactNode }) {
-  // Navegacao
   const [openDrawer, setOpenDrawer] = useState<DrawerId>(null);
-  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [workRegime, setWorkRegimeState] = useState<WorkRegime | null>(null);
 
-  // Resultados
-  const [taxResult, setTaxResult] = useState<TaxCalculationResult | null>(null);
+  const [taxResult, setTaxResult]       = useState<TaxCalculationResult | null>(null);
   const [salaryResult, setSalaryResult] = useState<SalaryBreakdown | null>(null);
   const [utilityResult, setUtilityResult] = useState<UtilityTaxResult | null>(null);
+  const [nfeTaxAmount, setNfeTaxAmount] = useState<number | null>(null);
 
-  // Inputs persistidos
   const [consumoInputs, setConsumoInputs] = useState<CalculatorInputState>(INITIAL_CONSUMO_INPUTS);
-  const [nfeRawInput, setNfeRawInput] = useState("");
-  const [rawSalary, setRawSalary] = useState("");
+  const [nfeRawInput, setNfeRawInput]     = useState("");
+  const [rawSalary, setRawSalary]         = useState("");
   const [utilityInputs, setUtilityInputs] = useState<UtilityFormInputs>(INITIAL_UTILITY_INPUTS);
 
-  // Restaurar salario do localStorage no mount
   useEffect(() => {
+    const storedRegime = localStorage.getItem(LS_REGIME_KEY) as WorkRegime | null;
+    if (storedRegime && ["CLT", "MEI", "PJ"].includes(storedRegime)) {
+      setWorkRegimeState(storedRegime);
+    }
+
     const stored = localStorage.getItem(LS_SALARY_KEY);
     if (!stored) return;
     const n = parseFloat(stored);
@@ -116,7 +117,6 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persistir salario quando rawSalary muda
   useEffect(() => {
     if (!rawSalary) return;
     const clean = rawSalary.replace(/R\$\s?/g, "").replace(/\./g, "").replace(",", ".");
@@ -124,7 +124,11 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
     if (n > 0) localStorage.setItem(LS_SALARY_KEY, n.toString());
   }, [rawSalary]);
 
-  // Geolocation — detecta UF uma unica vez no mount
+  function setWorkRegime(r: WorkRegime) {
+    setWorkRegimeState(r);
+    localStorage.setItem(LS_REGIME_KEY, r);
+  }
+
   const [isDetectingLocation, setIsDetectingLocation] = useState(true);
   useEffect(() => {
     let cancelled = false;
@@ -136,21 +140,19 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
         setConsumoInputs((prev) => ({ ...prev, uf: result.uf }));
       }
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  // Derivados
-  const hasAnyResult = taxResult !== null || salaryResult !== null || utilityResult !== null;
+  const hasAnyResult = salaryResult !== null || taxResult !== null || utilityResult !== null || nfeTaxAmount !== null;
 
   const totalTaxImpact = useMemo(() => {
     let total = 0;
-    if (taxResult) total += taxResult.totalTaxAmount;
-    if (salaryResult) total += salaryResult.totalTaxBurden;
+    if (taxResult)     total += taxResult.totalTaxAmount;
+    if (salaryResult)  total += salaryResult.totalTaxBurden;
     if (utilityResult) total += utilityResult.totalTaxAmount;
+    if (nfeTaxAmount)  total += nfeTaxAmount;
     return total;
-  }, [taxResult, salaryResult, utilityResult]);
+  }, [taxResult, salaryResult, utilityResult, nfeTaxAmount]);
 
   const laborWorkHours = useMemo(() => {
     if (!salaryResult || salaryResult.grossSalary <= 0) return null;
@@ -158,7 +160,6 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
     return totalTaxImpact / hourlyRate;
   }, [salaryResult, totalTaxImpact]);
 
-  // Compatibilidade retroativa
   const activeSection: SectionId = openDrawer ?? "dashboard";
   function setActiveSection(s: SectionId) {
     setOpenDrawer(s === "dashboard" ? null : (s as DrawerId));
@@ -169,16 +170,18 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
       value={{
         openDrawer,
         setOpenDrawer,
-        glossaryOpen,
-        setGlossaryOpen,
         activeSection,
         setActiveSection,
+        workRegime,
+        setWorkRegime,
         taxResult,
         salaryResult,
         utilityResult,
         setTaxResult,
         setSalaryResult,
         setUtilityResult,
+        nfeTaxAmount,
+        setNfeTaxAmount,
         hasAnyResult,
         totalTaxImpact,
         laborWorkHours,

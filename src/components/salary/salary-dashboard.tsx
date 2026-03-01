@@ -14,17 +14,8 @@ import { Info, Briefcase } from "lucide-react";
 import { useSalaryCalculator } from "@/hooks/use-salary-calculator";
 import { computeTaxTrail, EMPLOYEE_GLOSSARY } from "@/lib/salary-engine";
 import type { EmployerCharge, SalaryBreakdown, TaxTrailShare } from "@/types/salary";
+import { BRL, PCT } from "@/lib/utils";
 
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
-
-const PCT = (v: number) =>
-  `${(v * 100).toFixed(1)}%`;
-
-
-// ============================================================
-// Tooltip padrao para encargos
-// ============================================================
 function ChargeTooltip({
   description,
   children,
@@ -49,9 +40,6 @@ function ChargeTooltip({
   );
 }
 
-// ============================================================
-// Tooltip do Recharts para o stacked bar
-// ============================================================
 function BarCustomTooltip({
   active,
   payload,
@@ -102,9 +90,6 @@ function BarCustomTooltip({
   );
 }
 
-// ============================================================
-// Gráfico de barras empilhadas — stacked horizontal
-// ============================================================
 function SalaryStackedBar({ result }: { result: SalaryBreakdown }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -178,9 +163,6 @@ function SalaryStackedBar({ result }: { result: SalaryBreakdown }) {
   );
 }
 
-// ============================================================
-// Linha de encargo com Tooltip
-// ============================================================
 function ChargeRow({
   label,
   rate,
@@ -241,9 +223,6 @@ function ChargeRow({
   );
 }
 
-// ============================================================
-// Rastro do Sustento — decomposicao do imposto total
-// ============================================================
 function TaxTrailSection({ shares }: { shares: TaxTrailShare[] }) {
   const total = shares.reduce((s, t) => s + t.amount, 0);
 
@@ -314,9 +293,6 @@ function TaxTrailSection({ shares }: { shares: TaxTrailShare[] }) {
   );
 }
 
-// ============================================================
-// Skeleton
-// ============================================================
 function SalarySkeleton() {
   return (
     <div className="flex flex-col gap-4 select-none" aria-hidden="true">
@@ -351,9 +327,6 @@ function SalarySkeleton() {
   );
 }
 
-// ============================================================
-// Componente principal
-// ============================================================
 export interface SalaryDashboardProps {
   activeTab?: "empregado" | "empregador";
   onResult?: (r: SalaryBreakdown | null) => void;
@@ -382,7 +355,6 @@ export function SalaryDashboard({ activeTab = "empregado", onResult }: SalaryDas
   return (
     <Tooltip.Provider delayDuration={180}>
       <div className="flex w-full flex-col gap-6">
-        {/* Input de salario */}
         <div className="card-glass w-full rounded-2xl p-6">
           <div className="mb-4 flex items-center gap-2">
             <Briefcase size={14} style={{ color: "#10B981", opacity: 0.6 }} />
@@ -411,7 +383,6 @@ export function SalaryDashboard({ activeTab = "empregado", onResult }: SalaryDas
 
         {isValid && result ? (
           <>
-            {/* Stacked bar — sempre visivel acima das tabs */}
             <div className="card-glass rounded-2xl p-5">
               <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.16em] text-white/25">
                 Decomposicao do Custo Total do Trabalho
@@ -457,10 +428,8 @@ export function SalaryDashboard({ activeTab = "empregado", onResult }: SalaryDas
               </div>
             </div>
 
-            {/* Conteudo por tab */}
             {activeTab === "empregado" ? (
               <>
-                {/* Stat cards — empregado */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
                     <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
@@ -486,7 +455,6 @@ export function SalaryDashboard({ activeTab = "empregado", onResult }: SalaryDas
                   </div>
                 </div>
 
-                {/* Retencoes do empregado */}
                 <div className="card-glass rounded-2xl p-5">
                   <div className="mb-1 flex items-center gap-2">
                     <span className="h-[5px] w-5 rounded-full" style={{ background: "#EF4444", opacity: 0.7 }} />
@@ -541,7 +509,6 @@ export function SalaryDashboard({ activeTab = "empregado", onResult }: SalaryDas
               </>
             ) : (
               <>
-                {/* Stat cards — empregador */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="card-glass flex flex-col gap-1.5 rounded-2xl p-5">
                     <p className="text-[10px] font-medium uppercase tracking-[0.13em] text-white/25">
@@ -567,7 +534,6 @@ export function SalaryDashboard({ activeTab = "empregado", onResult }: SalaryDas
                   </div>
                 </div>
 
-                {/* Encargos patronais */}
                 <div className="card-glass rounded-2xl p-5">
                   <div className="mb-1 flex items-center gap-2">
                     <span className="h-[5px] w-5 rounded-full" style={{ background: "#3B82F6", opacity: 0.7 }} />

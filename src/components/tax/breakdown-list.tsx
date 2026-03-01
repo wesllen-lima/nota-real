@@ -3,9 +3,7 @@
 import { Tooltip } from "radix-ui";
 import { Info } from "lucide-react";
 import type { TaxBreakdown } from "@/types/tax";
-
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+import { BRL } from "@/lib/utils";
 
 const LEVEL_COLOR: Record<string, string> = {
   federal: "#3B82F6",
@@ -18,9 +16,7 @@ const LEVEL_LABEL: Record<string, string> = {
   municipal: "Municipal",
 };
 
-// Items IVA teste sempre recebem teal
 const IVA_COLOR = "#14B8A6";
-
 
 interface Props {
   breakdown: TaxBreakdown[];
@@ -135,7 +131,6 @@ export function BreakdownList({ breakdown, grossPrice, isHybrid = false }: Props
 
       <Tooltip.Provider delayDuration={180}>
         <div className="flex flex-col">
-          {/* ---- Grupo: Sistema Legado ---- */}
           {isHybrid && legacyItems.length > 0 && (
             <div className="mb-1 flex items-center gap-2">
               <span
@@ -159,7 +154,6 @@ export function BreakdownList({ breakdown, grossPrice, isHybrid = false }: Props
             ))}
           </div>
 
-          {/* ---- Separador + Grupo: IVA Dual ---- */}
           {isHybrid && ivaItems.length > 0 && (
             <>
               <div className="my-4 flex items-center gap-3">

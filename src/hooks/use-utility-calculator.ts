@@ -4,11 +4,33 @@ import { useCallback, useState } from "react";
 import { calculateUtilityTax, getDefaultRegionalAverage } from "@/lib/utility-engine";
 import { UtilityInputSchema } from "@/types/utility";
 import type { UtilityInput, UtilityTaxResult } from "@/types/utility";
+import { toast } from "@/hooks/use-toast";
+
+// NCM por tipo de utilidade (para consulta IBPT)
+const NCM_ENERGIA = "27160000"; // Energia eletrica
+const NCM_AGUA    = "22011000"; // Agua natural/tratada
 
 interface State {
   result: UtilityTaxResult | null;
   error: string | null;
   isCalculating: boolean;
+}
+
+async function fetchIcmsFromIbpt(ncm: string, uf: string): Promise<number | undefined> {
+  try {
+    const params = new URLSearchParams({ ...(uf ? { uf } : {}) });
+    const res = await fetch(`/api/ibpt/ncm/${ncm}?${params.toString()}`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) return undefined;
+    const data = await res.json() as { estadual?: number; source?: string };
+    if (data.source === "ibpt_live" && typeof data.estadual === "number") {
+      return data.estadual; // ja em decimal (0..1)
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function useUtilityCalculator() {
@@ -18,7 +40,7 @@ export function useUtilityCalculator() {
     isCalculating: false,
   });
 
-  const calculate = useCallback((raw: Partial<UtilityInput>) => {
+  const calculate = useCallback(async (raw: Partial<UtilityInput>) => {
     setState((s) => ({ ...s, isCalculating: true, error: null }));
 
     const parsed = UtilityInputSchema.safeParse(raw);
@@ -31,8 +53,16 @@ export function useUtilityCalculator() {
       return;
     }
 
+    // Busca ICMS em tempo real via IBPT — fallback automatico se offline
+    const ncm = parsed.data.type === "energia" ? NCM_ENERGIA : NCM_AGUA;
+    const uf  = parsed.data.uf ?? "";
+    const icmsRate = await fetchIcmsFromIbpt(ncm, uf);
+    if (icmsRate === undefined) {
+      toast("IBPT offline — usando ICMS medio nacional como fallback");
+    }
+
     try {
-      const result = calculateUtilityTax(parsed.data);
+      const result = calculateUtilityTax({ ...parsed.data, icmsRate });
       setState({ result, isCalculating: false, error: null });
     } catch (err) {
       setState({

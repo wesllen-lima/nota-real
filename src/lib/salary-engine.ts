@@ -10,9 +10,6 @@ import {
   IRPF_REDUCTION_2026,
 } from "@/config/salary-tables-2026";
 
-// ============================================================
-// Glossario dos encargos patronais para Tooltip didatico
-// ============================================================
 export const EMPLOYER_GLOSSARY: Record<string, string> = {
   INSS_PATRONAL:
     "Contribuicao previdenciaria paga pela empresa ao INSS sobre cada salario, " +
@@ -41,9 +38,6 @@ export const EMPLOYER_GLOSSARY: Record<string, string> = {
     "Representa 8,33% de custo adicional mensal sobre a folha.",
 };
 
-// ============================================================
-// Glossario das retencoes do empregado
-// ============================================================
 export const EMPLOYEE_GLOSSARY: Record<"INSS" | "IRPF", string> = {
   INSS:
     "Contribuicao previdenciaria retida diretamente do salario. Calculada progressivamente: " +
@@ -58,16 +52,10 @@ export const EMPLOYEE_GLOSSARY: Record<"INSS" | "IRPF", string> = {
     "A aliquota efetiva e sempre inferior a marginal pois as faixas inferiores pagam menos.",
 };
 
-// ============================================================
-// Utilitario de arredondamento
-// ============================================================
 function round(v: number, d = 2): number {
   return Math.round(v * 10 ** d) / 10 ** d;
 }
 
-// ============================================================
-// Calculo INSS — soma progressiva por faixas
-// ============================================================
 function calcInss(grossSalary: number): number {
   const base = Math.min(grossSalary, INSS_TETO);
   let total = 0;
@@ -82,11 +70,9 @@ function calcInss(grossSalary: number): number {
   return round(total);
 }
 
-// ============================================================
-// Calculo IRPF — dois passos (Lei 15.191/2025 + Lei 15.270/2025)
-// ============================================================
-// base        = grossSalary − INSS (aplicado na tabela progressiva)
-// grossSalary = rendimentos brutos (usado no redutor linear)
+// IRPF — dois passos (Lei 15.191/2025 + Lei 15.270/2025)
+// base        = grossSalary − INSS (tabela progressiva)
+// grossSalary = rendimentos brutos (redutor linear)
 function calcIrpf(base: number, grossSalary: number): { amount: number; marginalRate: number } {
   // Passo 1: tabela progressiva mensal (Lei 15.191/2025)
   let irpfBruto = 0;
@@ -114,13 +100,9 @@ function calcIrpf(base: number, grossSalary: number): { amount: number; marginal
   };
 }
 
-// ============================================================
-// API publica: motor de calculo salarial
-// ============================================================
 export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
   if (grossSalary <= 0) throw new RangeError("grossSalary deve ser maior que zero.");
 
-  // --- Empregado ---
   const inssEmployee = calcInss(grossSalary);
   const irpfBase = Math.max(0, grossSalary - inssEmployee);
   const { amount: irpfAmount, marginalRate: marginalIrpfRate } = calcIrpf(irpfBase, grossSalary);
@@ -128,7 +110,6 @@ export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
   const netSalary = round(grossSalary - totalEmployeeDeductions);
   const effectiveEmployeeRate = round(totalEmployeeDeductions / grossSalary, 4);
 
-  // --- Empregador ---
   const chargesConfig: Array<{
     code: string;
     label: string;
@@ -167,14 +148,14 @@ export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
     {
       code: "FERIAS",
       label: "Provisao Ferias",
-      rate: 0.1111,
+      rate: 1 / 9, // 40 dias / 360 dias = 1/9 exato (11.111...%)
       isProvision: true,
       governmentLevel: "trabalhista",
     },
     {
       code: "DECIMO_TERCEIRO",
       label: "Provisao 13o Salario",
-      rate: 0.0833,
+      rate: 1 / 12, // 1 mês / 12 meses = 1/12 exato (8.333...%)
       isProvision: true,
       governmentLevel: "trabalhista",
     },
@@ -195,8 +176,18 @@ export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
   const totalEmployerCost = round(
     employerCharges.reduce((s, c) => s + c.amount, 0)
   );
+  // Direitos trabalhistas — NAO sao impostos capturados pelo Estado
+  const totalLaborProvisions = round(
+    employerCharges
+      .filter((c) => c.isProvision)
+      .reduce((s, c) => s + c.amount, 0)
+  );
+  // Encargos patronais puros (impostos): INSS Patronal, RAT, Sistema S, FGTS
+  const totalEmployerTaxes = round(totalEmployerCost - totalLaborProvisions);
+
   const realLaborCost = round(grossSalary + totalEmployerCost);
-  const totalTaxBurden = round(totalEmployeeDeductions + totalEmployerCost);
+  // totalTaxBurden = APENAS tributos estatais (CLAUDE.md: "O Socio Oculto")
+  const totalTaxBurden = round(totalEmployeeDeductions + totalEmployerTaxes);
   const effectiveTotalRate = round(totalTaxBurden / realLaborCost, 4);
 
   return {
@@ -212,14 +203,13 @@ export function calculateSalaryBreakdown(grossSalary: number): SalaryBreakdown {
     totalEmployerCost,
     realLaborCost,
     totalTaxBurden,
+    totalLaborProvisions,
     effectiveTotalRate,
   };
 }
 
-// ============================================================
 // Distribuicao estimada da arrecadacao — LOA 2024 (STN/SOF)
 // Fonte: Relatorio de Acompanhamento Fiscal IPCA/STN 2024
-// ============================================================
 const TAX_TRAIL_DISTRIBUTION: Array<Omit<TaxTrailShare, "amount">> = [
   {
     label: "Previdencia e Pensoes",

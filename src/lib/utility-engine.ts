@@ -6,18 +6,25 @@ import type {
   UtilityTaxRates,
   UtilityTaxResult,
 } from "@/types/utility";
-import { ICMS_ENERGIA_BY_UF, ICMS_AGUA_BY_UF } from "@/config/icms-by-uf";
+
+// ============================================================
+// Medias nacionais — fallback de segurança (CONFAZ/ANEEL 2025)
+// Usadas APENAS quando a API IBPT estiver offline.
+// Proibido usar dicionários por UF (CLAUDE.md: Zero Hardcode Regional)
+// ============================================================
+const ICMS_ENERGIA_NACIONAL_MEDIA = 0.25; // media ponderada Brasil (CONFAZ 2025)
+const ICMS_AGUA_NACIONAL_MEDIA    = 0.12; // media (maioria dos estados: isento ou reduzido)
 
 // PIS/COFINS energia — distribuidoras (regime nao-cumulativo, ANEEL 2025)
 const PIS_COFINS_ENERGIA: UtilityTaxRates = {
-  icms: 0.25,     // fallback (sobrescrito por UF)
+  icms: ICMS_ENERGIA_NACIONAL_MEDIA, // sobrescrito pelo icmsRate dinamico
   pis: 0.0165,    // 1,65% — Decreto 5.442/2005 (nao-cumulativo)
   cofins: 0.076,  // 7,6% — Decreto 5.442/2005
 };
 
 // PIS/COFINS agua — saneamento (lucro presumido, RFB)
 const PIS_COFINS_AGUA: UtilityTaxRates = {
-  icms: 0.0,      // fallback (sobrescrito por UF)
+  icms: ICMS_AGUA_NACIONAL_MEDIA, // sobrescrito pelo icmsRate dinamico
   pis: 0.0065,    // 0,65% — regime cumulativo saneamento
   cofins: 0.03,   // 3,0%
 };
@@ -44,32 +51,21 @@ export const REGIONAL_AVERAGES: RegionalAverage[] = [
   },
 ];
 
-// ============================================================
-// Utilitarios internos
-// ============================================================
 function round(v: number, d = 2): number {
   return Math.round(v * 10 ** d) / 10 ** d;
 }
 
 function getRates(input: UtilityInput): UtilityTaxRates {
-  const uf = input.uf?.toUpperCase() ?? "RO";
-
   if (input.type === "energia") {
     return {
-      icms: ICMS_ENERGIA_BY_UF[uf] ?? 0.25,
+      icms: input.icmsRate ?? ICMS_ENERGIA_NACIONAL_MEDIA,
       pis: PIS_COFINS_ENERGIA.pis,
       cofins: PIS_COFINS_ENERGIA.cofins,
     };
   }
 
-  // agua
-  const icmsAgua =
-    ICMS_AGUA_BY_UF[uf] !== undefined
-      ? ICMS_AGUA_BY_UF[uf]
-      : ICMS_AGUA_BY_UF["_default"] ?? 0.12;
-
   return {
-    icms: icmsAgua,
+    icms: input.icmsRate ?? ICMS_AGUA_NACIONAL_MEDIA,
     pis: PIS_COFINS_AGUA.pis,
     cofins: PIS_COFINS_AGUA.cofins,
   };
@@ -80,7 +76,6 @@ function buildCascade(
   rates: UtilityTaxRates
 ): CascadeTax {
   // Imposto em cascata: ICMS incide sobre a base que ja contem PIS e COFINS.
-  // Cascata = icmsRate * (pisAmount + cofinsAmount)
   const pisAmount = totalValue * rates.pis;
   const cofinsAmount = totalValue * rates.cofins;
   const cascadeAmount = round(rates.icms * (pisAmount + cofinsAmount));
@@ -106,9 +101,6 @@ function buildCosip(input: UtilityInput): CosipEntry | null {
   };
 }
 
-// ============================================================
-// Motor publico
-// ============================================================
 export function calculateUtilityTax(input: UtilityInput): UtilityTaxResult {
   const rates = getRates(input);
   const { totalValue, regime } = input;

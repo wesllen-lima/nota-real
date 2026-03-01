@@ -2,11 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppContext } from "@/context/impact-context";
-
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
-
-const PCT = (v: number, d = 1) => `${(v * 100).toFixed(d)}%`;
+import { BRL, PCT } from "@/lib/utils";
 
 function Chip({
   label,
@@ -52,7 +48,7 @@ export function ImpactHeader() {
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.25, ease: "easeInOut" }}
-          className="sticky top-0 z-30 overflow-hidden border-b border-white/[0.09] bg-zinc-950/85 backdrop-blur-xl"
+          className="sticky top-0 z-30 overflow-hidden border-b border-white/[0.08] bg-zinc-950"
         >
           <div className="flex min-h-[52px] flex-wrap items-center gap-3 px-4 py-3 md:px-6">
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/35">

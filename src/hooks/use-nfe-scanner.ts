@@ -1,137 +1,182 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { validateChave, getUFFromChave } from "@/services/nfe";
-import { calculateTaxBreakdown } from "@/lib/tax-engine";
-import { useAppContext } from "@/context/impact-context";
-import type { NFeChaveParsed } from "@/types/nfe";
-import type { ProductCategory, TaxCalculationResult } from "@/types/tax";
+import { useState, useCallback, useRef } from "react";
+import { parseNFeXml } from "@/services/nfe";
+import { toast } from "@/hooks/use-toast";
+import type { NFeParsed } from "@/types/nfe";
 
-export interface SimulatedItem {
-  nItem: number;
-  xProd: string;
-  category: ProductCategory;
-  grossPrice: number;
-  taxResult: TaxCalculationResult;
-}
-
-export type ScannerStatus = "idle" | "valid" | "invalid";
+export type NfeScannerMode = "upload" | "qr";
+export type NfeScannerStatus = "idle" | "loading" | "success" | "error";
 
 export interface NfeScannerState {
-  rawInput: string;
-  status: ScannerStatus;
-  errorMessage: string | null;
-  parsedKey: NFeChaveParsed | null;
-  uf: string | null;
-  items: SimulatedItem[];
-}
-
-const MOCK_TEMPLATES: Array<{
-  xProd: string;
-  category: ProductCategory;
-  base: number;
-}> = [
-  { xProd: "Arroz Tipo 1 5kg", category: "alimentacao", base: 24.9 },
-  { xProd: "Leite Integral 1L", category: "alimentacao", base: 5.8 },
-  { xProd: "Detergente Liquido 500ml", category: "geral", base: 4.5 },
-  { xProd: "Agua Mineral 1,5L", category: "alimentacao", base: 3.2 },
-  { xProd: "Papel Higienico 4un", category: "geral", base: 9.9 },
-  { xProd: "Sabao em Po 1kg", category: "geral", base: 18.5 },
-  { xProd: "Oleo de Soja 900ml", category: "alimentacao", base: 8.9 },
-  { xProd: "Feijao Carioca 1kg", category: "alimentacao", base: 7.8 },
-];
-
-// Deterministic simulation — itens derivados da estrutura da chave
-function generateSimulatedItems(key: string): SimulatedItem[] {
-  const sum = key.split("").reduce((s, c) => s + parseInt(c, 10), 0);
-  const seed = sum % MOCK_TEMPLATES.length;
-  const factor = 1 + seed / 200;
-
-  const indices = [
-    seed,
-    (seed + 2) % MOCK_TEMPLATES.length,
-    (seed + 4) % MOCK_TEMPLATES.length,
-    (seed + 6) % MOCK_TEMPLATES.length,
-  ];
-
-  return indices.map((templateIdx, i) => {
-    const t = MOCK_TEMPLATES[templateIdx];
-    const grossPrice = Math.round(t.base * factor * 100) / 100;
-    const taxResult = calculateTaxBreakdown({
-      grossPrice,
-      productCategory: t.category,
-      regime: "reforma_2026",
-    });
-    return { nItem: i + 1, xProd: t.xProd, category: t.category, grossPrice, taxResult };
-  });
+  mode: NfeScannerMode;
+  status: NfeScannerStatus;
+  result: NFeParsed | null;
+  error: string | null;
+  /** URL detectada pelo QR antes de scraping */
+  detectedUrl: string | null;
 }
 
 const INITIAL_STATE: NfeScannerState = {
-  rawInput: "",
+  mode: "upload",
   status: "idle",
-  errorMessage: null,
-  parsedKey: null,
-  uf: null,
-  items: [],
+  result: null,
+  error: null,
+  detectedUrl: null,
 };
 
 export function useNfeScanner() {
-  const { nfeRawInput, setNfeRawInput } = useAppContext();
+  const [state, setState] = useState<NfeScannerState>(INITIAL_STATE);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const rafRef = useRef<number | null>(null);
 
-  const [state, setState] = useState<NfeScannerState>({
-    ...INITIAL_STATE,
-    rawInput: nfeRawInput,
-  });
-
-  const handleInput = useCallback(
-    (raw: string) => {
-      const digits = raw.replace(/\D/g, "").slice(0, 44);
-      setNfeRawInput(digits);
-
-      if (digits.length < 44) {
-        setState({ ...INITIAL_STATE, rawInput: digits });
-        return;
-      }
-
-      const result = validateChave(digits);
-      if (!result.valid) {
-        setState({
-          rawInput: digits,
-          status: "invalid",
-          errorMessage: result.error.message,
-          parsedKey: null,
-          uf: null,
-          items: [],
-        });
-        return;
-      }
-
-      const uf = getUFFromChave(result.parsed);
-      const items = generateSimulatedItems(digits);
-
-      setState({
-        rawInput: digits,
-        status: "valid",
-        errorMessage: null,
-        parsedKey: result.parsed,
-        uf,
-        items,
-      });
-    },
-    [setNfeRawInput]
-  );
-
-  // Restaura estado se houver chave persistida no context
-  useEffect(() => {
-    if (nfeRawInput.length === 44 && state.status === "idle") {
-      handleInput(nfeRawInput);
+  const handleXmlUpload = useCallback((file: File) => {
+    if (!file.name.endsWith(".xml")) {
+      setState((s) => ({ ...s, status: "error", error: "Selecione um arquivo .xml de NF-e ou NFC-e." }));
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    setState((s) => ({ ...s, status: "loading", error: null, result: null }));
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const xml = e.target?.result as string;
+      const parsed = parseNFeXml(xml);
+      if (parsed.success) {
+        setState((s) => ({ ...s, status: "success", result: parsed.data, error: null }));
+      } else {
+        const errorMsg = parsed.error.message.toLowerCase().includes("nao reconhecido")
+          ? "Arquivo XML invalido ou nao reconhecido como Nota Fiscal."
+          : `Falha ao ler XML: ${parsed.error.message}`;
+        toast(errorMsg);
+        setState((s) => ({
+          ...s,
+          status: "error",
+          error: errorMsg,
+          result: null,
+        }));
+      }
+    };
+    reader.onerror = () => {
+      setState((s) => ({ ...s, status: "error", error: "Erro ao ler o arquivo.", result: null }));
+    };
+    reader.readAsText(file, "UTF-8");
   }, []);
 
-  const totalTaxAmount = state.items.reduce((s, item) => s + item.taxResult.totalTaxAmount, 0);
-  const totalGrossPrice = state.items.reduce((s, item) => s + item.grossPrice, 0);
-  const totalNetPrice = state.items.reduce((s, item) => s + item.taxResult.netPrice, 0);
+  const stopCamera = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  }, []);
 
-  return { state, handleInput, totalTaxAmount, totalGrossPrice, totalNetPrice };
+  const startQrScan = useCallback(async (video: HTMLVideoElement) => {
+    videoRef.current = video;
+
+    if (!("BarcodeDetector" in window)) {
+      setState((s) => ({
+        ...s,
+        mode: "qr",
+        status: "error",
+        error: "BarcodeDetector nao suportado neste navegador. Use o Chrome ou Edge, ou faca o upload do XML.",
+      }));
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      streamRef.current = stream;
+      video.srcObject = stream;
+      await video.play();
+
+      type BarcodeDetectorCtor = new (opts: { formats: string[] }) => {
+        detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
+      };
+      const BarcodeDetectorCls = (
+        window as Window & { BarcodeDetector: BarcodeDetectorCtor }
+      ).BarcodeDetector;
+      const detector = new BarcodeDetectorCls({ formats: ["qr_code"] });
+
+      setState((s) => ({ ...s, mode: "qr", status: "loading", error: null }));
+
+      const scan = async () => {
+        if (!streamRef.current) return;
+        try {
+          const codes = await detector.detect(video);
+          if (codes.length > 0) {
+            const url: string = codes[0].rawValue as string;
+            stopCamera();
+            setState((s) => ({ ...s, detectedUrl: url, status: "loading" }));
+            await scrapeNfce(url);
+            return;
+          }
+        } catch { /* continua scanneando */ }
+        rafRef.current = requestAnimationFrame(() => { scan(); });
+      };
+
+      rafRef.current = requestAnimationFrame(() => { scan(); });
+    } catch {
+      setState((s) => ({
+        ...s,
+        mode: "qr",
+        status: "error",
+        error: "Permissao de camera negada. Faca o upload do XML como alternativa.",
+      }));
+    }
+  }, [stopCamera]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function scrapeNfce(url: string) {
+    try {
+      const res = await fetch("/api/nfe/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json() as { error?: string };
+        setState((s) => ({
+          ...s,
+          status: "error",
+          error: err.error ?? `Erro do servidor: ${res.status}`,
+        }));
+        return;
+      }
+
+      const data = await res.json() as NFeParsed;
+      setState((s) => ({ ...s, status: "success", result: data, error: null }));
+    } catch {
+      setState((s) => ({
+        ...s,
+        status: "error",
+        error: "Falha de rede ao consultar a SEFAZ. Tente o upload do XML.",
+      }));
+    }
+  }
+
+  const setMode = useCallback((mode: NfeScannerMode) => {
+    stopCamera();
+    setState({ ...INITIAL_STATE, mode });
+  }, [stopCamera]);
+
+  const reset = useCallback(() => {
+    stopCamera();
+    setState(INITIAL_STATE);
+  }, [stopCamera]);
+
+  return {
+    state,
+    setMode,
+    reset,
+    handleXmlUpload,
+    startQrScan,
+    stopCamera,
+  };
 }

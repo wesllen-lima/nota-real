@@ -14,7 +14,7 @@ import { TrabalhoDrawer } from "@/components/drawers/trabalho-drawer";
 import { UtilityDrawer } from "@/components/drawers/utility-drawer";
 
 function AppContent() {
-  const { openDrawer, setOpenDrawer, glossaryOpen } = useAppContext();
+  const { openDrawer, setOpenDrawer } = useAppContext();
 
   return (
     <LayoutGroup>
@@ -23,23 +23,16 @@ function AppContent() {
         <TaxGlossarySidebar />
         <BottomNav />
 
-        {/* Coluna central — sidebar esq (240) + glossario dir (320, condicional) */}
-        <div className={`pb-16 md:ml-[240px] md:pb-0 ${glossaryOpen ? "md:mr-[320px]" : "md:mr-0"}`}>
-          {/* ImpactHeader so aparece quando um Drawer esta aberto */}
-          {openDrawer !== null && <ImpactHeader />}
+        <div className="pb-16 md:ml-[240px] md:mr-[320px] md:pb-0">
+          <ImpactHeader />
           <main className="px-5 py-5 sm:px-8">
-            {/* Dashboard e sempre o hub — nunca desmonta */}
             <DashboardSection />
           </main>
         </div>
 
-        {/* Intercept de onboarding — bloqueia ate o usuario informar a renda */}
         <OnboardingModal />
-
-        {/* Toast notifications */}
         <ToastContainer />
 
-        {/* Drawers sobrepostos ao dashboard */}
         <ConsumoDrawer
           isOpen={openDrawer === "consumo"}
           onClose={() => setOpenDrawer(null)}

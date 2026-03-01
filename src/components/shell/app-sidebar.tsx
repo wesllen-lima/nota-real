@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, ShoppingCart, Briefcase, Zap, BookOpen } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Briefcase, Zap } from "lucide-react";
 import { clsx } from "clsx";
 import { useAppContext, type DrawerId } from "@/context/impact-context";
 
@@ -16,7 +16,7 @@ export const NAV_ITEMS: Array<{
 ];
 
 export function AppSidebar() {
-  const { openDrawer, setOpenDrawer, glossaryOpen, setGlossaryOpen } = useAppContext();
+  const { openDrawer, setOpenDrawer } = useAppContext();
 
   function handleNav(id: string) {
     if (id === "dashboard") {
@@ -27,7 +27,7 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[240px] flex-col border-r border-white/[0.09] bg-zinc-950 backdrop-blur-xl md:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[240px] flex-col border-r border-white/[0.09] bg-zinc-950 md:flex">
       {/* Logo */}
       <div className="flex h-16 items-center px-6">
         <span
@@ -55,7 +55,7 @@ export function AppSidebar() {
               type="button"
               onClick={() => handleNav(id)}
               className={clsx(
-                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
                 isActive
                   ? "border border-gov-blue/25 bg-gov-blue/12 text-gov-blue"
                   : "border border-transparent text-white/35 hover:bg-white/[0.04] hover:text-white/60"
@@ -70,19 +70,6 @@ export function AppSidebar() {
 
       {/* Footer */}
       <div className="flex flex-col gap-2 px-3 pb-5">
-        <button
-          type="button"
-          onClick={() => setGlossaryOpen(!glossaryOpen)}
-          className={clsx(
-            "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-150",
-            glossaryOpen
-              ? "border-gov-blue/25 bg-gov-blue/12 text-gov-blue"
-              : "border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/60"
-          )}
-        >
-          <BookOpen size={13} className="shrink-0" />
-          Glossario
-        </button>
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
           <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">
             Reforma Tributaria

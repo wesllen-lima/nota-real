@@ -14,9 +14,6 @@ import type {
   TaxRegime,
 } from "@/types/tax";
 
-// ============================================================
-// Glossario para o Cidadao
-// ============================================================
 const CITIZEN_GLOSSARY: Record<GlossaryCode, GlossaryEntry> = {
   ICMS: {
     code: "ICMS",
@@ -113,9 +110,7 @@ const CITIZEN_GLOSSARY: Record<GlossaryCode, GlossaryEntry> = {
   },
 };
 
-// ============================================================
 // Aliquotas padrao do sistema legado (IBPT 2024/2025)
-// ============================================================
 export const DEFAULT_TAX_RATES: Record<"atual", Record<ProductCategory, TaxRate[]>> = {
   atual: {
     geral: [
@@ -161,9 +156,6 @@ const IVA_TEST_RATES: TaxRate[] = [
   { code: "IBS", rate: 0.001, basis: "por_dentro" }, // 0.1% — subnacional
 ];
 
-// ============================================================
-// Utilitarios
-// ============================================================
 function round(value: number, decimals = 2): number {
   return Math.round(value * 10 ** decimals) / 10 ** decimals;
 }
@@ -197,9 +189,6 @@ function buildBreakdown(
     });
 }
 
-// ============================================================
-// Calculo: Regime Atual
-// ============================================================
 function computeAtual(
   input: TaxCalculationInput,
   externalRates?: ExternalTaxRates
@@ -226,14 +215,8 @@ function computeAtual(
   };
 }
 
-// ============================================================
-// Calculo: Regime 2026 — Hibrido Obrigatorio (EC 132/2023)
-//
-// REGRA: sistema legado CONTINUA ATIVO + IVA de teste EMPILHADO.
-// O imposto total em 2026 e MAIOR que no regime atual.
-// A fatia IVA (1%) e apenas a "semente" do novo sistema.
-// A simplificacao ocorre entre 2029 e 2033.
-// ============================================================
+// EC 132/2023: sistema legado CONTINUA ATIVO + IVA de teste EMPILHADO em 2026.
+// Carga total e MAIOR que no regime atual. Simplificacao progressiva ocorre entre 2029 e 2033.
 function computeHybrid2026(
   input: TaxCalculationInput,
   externalRates?: ExternalTaxRates
@@ -274,9 +257,6 @@ function computeHybrid2026(
   };
 }
 
-// ============================================================
-// API publica do motor
-// ============================================================
 export function calculateTaxBreakdown(
   input: TaxCalculationInput,
   externalRates?: ExternalTaxRates

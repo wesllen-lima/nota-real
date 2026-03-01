@@ -24,10 +24,8 @@ const IBGE_UF_CODE: Record<string, string> = {
   "52": "GO", "53": "DF",
 };
 
-// ============================================================
 // Algoritmo mod-11 para verificacao do digito da chave NF-e
 // Fonte: Manual de Orientacao ao Contribuinte NF-e v7.0
-// ============================================================
 function calcDigitoVerificador(key43: string): number {
   const pesos = [2, 3, 4, 5, 6, 7, 8, 9];
   let soma = 0;
@@ -38,9 +36,6 @@ function calcDigitoVerificador(key43: string): number {
   return resto < 2 ? 0 : 11 - resto;
 }
 
-// ============================================================
-// Validacao e parsing da chave de acesso
-// ============================================================
 export function validateChave(
   chave: string
 ): { valid: true; parsed: NFeChaveParsed } | { valid: false; error: NFeServiceError } {
@@ -103,10 +98,6 @@ export function getUFFromChave(parsed: NFeChaveParsed): string {
   return IBGE_UF_CODE[parsed.cUF] ?? parsed.cUF;
 }
 
-// ============================================================
-// Parser de XML NF-e
-// Executa no cliente ou no servidor (DOMParser / xmldom)
-// ============================================================
 function getTextContent(parent: Element, tag: string): string {
   return parent.querySelector(tag)?.textContent?.trim() ?? "";
 }
@@ -127,6 +118,18 @@ export function parseNFeXml(
       return {
         success: false,
         error: { code: "PARSE_ERROR", message: "XML invalido ou malformado" },
+      };
+    }
+
+    // Valida que o root é uma estrutura reconhecida de NF-e/NFC-e
+    const rootTag = doc.documentElement?.tagName;
+    if (!rootTag || (rootTag !== "nfeProc" && rootTag !== "NFe" && rootTag !== "nfce")) {
+      return {
+        success: false,
+        error: {
+          code: "PARSE_ERROR",
+          message: "Arquivo XML nao reconhecido como Nota Fiscal. Esperado: nfeProc ou NFe",
+        },
       };
     }
 
@@ -224,45 +227,6 @@ export function parseNFeXml(
       error: {
         code: "PARSE_ERROR",
         message: err instanceof Error ? err.message : "Erro desconhecido ao parsear XML",
-      },
-    };
-  }
-}
-
-// ============================================================
-// Busca da NF-e via API Route do Next.js (proxy SEFAZ)
-// A rota /api/nfe/[chave] deve ser implementada para evitar CORS
-// ============================================================
-export async function fetchNFe(
-  chave: string
-): Promise<{ success: true; data: NFeParsed } | { success: false; error: NFeServiceError }> {
-  const validation = validateChave(chave);
-  if (!validation.valid) {
-    return { success: false, error: validation.error };
-  }
-
-  try {
-    const res = await fetch(`/api/nfe/${chave}`);
-    if (res.status === 404) {
-      return {
-        success: false,
-        error: { code: "NOT_FOUND", message: "NF-e nao encontrada na SEFAZ" },
-      };
-    }
-    if (!res.ok) {
-      return {
-        success: false,
-        error: { code: "FETCH_ERROR", message: `Erro ao consultar NF-e: ${res.status}` },
-      };
-    }
-    const xml: string = await res.text();
-    return parseNFeXml(xml);
-  } catch {
-    return {
-      success: false,
-      error: {
-        code: "FETCH_ERROR",
-        message: "Falha de rede ao consultar a SEFAZ",
       },
     };
   }

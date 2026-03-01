@@ -42,13 +42,16 @@ export function Drawer({ isOpen, onClose, title, description, children }: Drawer
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/50"
+            className="fixed inset-0 z-50 bg-black/70"
             aria-hidden="true"
           />
 
           {/* Mobile — slide from bottom */}
           <motion.div
             key="drawer-mobile"
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -66,8 +69,9 @@ export function Drawer({ isOpen, onClose, title, description, children }: Drawer
                   )}
                 </div>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="rounded-lg p-2.5 text-white/25 transition-colors hover:text-white/60"
+                  className="rounded-lg p-2.5 text-white/25 transition-colors hover:text-white/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
                   aria-label="Fechar"
                 >
                   <X size={16} />
@@ -84,6 +88,9 @@ export function Drawer({ isOpen, onClose, title, description, children }: Drawer
           {/* Desktop — slide from right */}
           <motion.div
             key="drawer-desktop"
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -99,8 +106,9 @@ export function Drawer({ isOpen, onClose, title, description, children }: Drawer
                 )}
               </div>
               <button
+                type="button"
                 onClick={onClose}
-                className="rounded-lg p-2.5 text-white/25 transition-colors hover:text-white/60"
+                className="rounded-lg p-2.5 text-white/25 transition-colors hover:text-white/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
                 aria-label="Fechar"
               >
                 <X size={16} />

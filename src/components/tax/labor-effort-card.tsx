@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { Clock } from "lucide-react";
+import { BRL } from "@/lib/utils";
 
 interface Props {
   totalTaxAmount: number;
 }
-
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
 function formatWorkTime(totalMinutes: number): string {
   if (totalMinutes < 1) return "< 1 min";

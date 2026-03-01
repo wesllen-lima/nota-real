@@ -82,11 +82,21 @@ describe("calculateSalaryBreakdown — invariantes", () => {
     }
   });
 
-  it("totalTaxBurden = inssEmployee + irpfAmount + totalEmployerCost", () => {
+  it("totalTaxBurden = apenas tributos estatais (sem ferias/13o)", () => {
     for (const s of salarios) {
       const r = calculateSalaryBreakdown(s);
-      const expected = R(r.inssEmployee + r.irpfAmount + r.totalEmployerCost);
+      // totalTaxBurden exclui totalLaborProvisions (ferias + 13o nao sao impostos)
+      const employerTaxes = R(r.totalEmployerCost - r.totalLaborProvisions);
+      const expected = R(r.inssEmployee + r.irpfAmount + employerTaxes);
       expect(Math.abs(r.totalTaxBurden - expected)).toBeLessThanOrEqual(0.01);
+    }
+  });
+
+  it("totalLaborProvisions = ferias (1/9) + 13o (1/12) do grossSalary", () => {
+    for (const s of salarios) {
+      const r = calculateSalaryBreakdown(s);
+      const expected = R(s * (1/9 + 1/12)); // ferias exata (1/9) + 13o exato (1/12)
+      expect(Math.abs(r.totalLaborProvisions - expected)).toBeLessThanOrEqual(0.01);
     }
   });
 

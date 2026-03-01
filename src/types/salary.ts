@@ -1,7 +1,3 @@
-// ============================================================
-// Motor de Renda — Tipos de contrato
-// ============================================================
-
 export interface InssBracket {
   upTo: number | null;
   rate: number;
@@ -51,7 +47,10 @@ export interface SalaryBreakdown {
 
   // Perspectiva consolidada (custo real do trabalho)
   realLaborCost: number;
+  /** Apenas tributos capturados pelo Estado: INSS Patronal, FGTS, Sistema S, RAT, INSS Empregado, IRPF */
   totalTaxBurden: number;
+  /** Direitos trabalhistas — NAO sao impostos: Ferias + 13o Salario */
+  totalLaborProvisions: number;
   effectiveTotalRate: number;
 }
 

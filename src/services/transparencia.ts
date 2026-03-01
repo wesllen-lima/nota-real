@@ -8,7 +8,7 @@ import { CguResponseSchema } from "@/types/utility";
 // Fonte: https://www.gov.br/orcamento/pt-br/loa/loa-2026
 // ============================================================
 const LOA_2026 = {
-  totalBi: 6_100,                    // PLOA 2026 revisado — SIOP/SOF
+  totalBi: 6_540,                    // LOA 2026 — Lei 14.903/2024 (aprovada, R$ 6,54 Tri)
   saude:       { bi: 271.3, funcaoCodigo: "10", funcaoNome: "Saude" },
   educacao:    { bi: 233.7, funcaoCodigo: "12", funcaoNome: "Educacao" },
   seguranca:   { bi: 37,   funcaoCodigo: "06", funcaoNome: "Seguranca Publica" },
@@ -45,9 +45,6 @@ export const UNIT_COSTS = {
   horaPolicia: 35.0,
 } as const;
 
-// ============================================================
-// Calculo de equivalencias sociais com base no imposto mensal
-// ============================================================
 export function computeSocialImpact(monthlyTaxAmount: number): SocialImpact {
   const annual = monthlyTaxAmount * 12;
 
@@ -102,9 +99,6 @@ export function computeSocialImpact(monthlyTaxAmount: number): SocialImpact {
   };
 }
 
-// ============================================================
-// Busca gastos via API route (proxy CGU) — com fallback LOA 2026
-// ============================================================
 const GastosApiResponseSchema = z.object({
   saude:       z.number(),
   educacao:    z.number(),

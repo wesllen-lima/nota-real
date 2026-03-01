@@ -3,19 +3,15 @@
 import { useEffect, useState } from "react";
 import { Cell, Pie, PieChart, Tooltip as RechartsTooltip } from "recharts";
 import type { TaxBreakdown, TaxCalculationResult } from "@/types/tax";
+import { BRL } from "@/lib/utils";
 
-// Paleta por nivel de governo — gradiente do mais vivo para 60%
 const LEGACY_PALETTE: Record<string, string[]> = {
   federal: ["#3B82F6", "#60A5FA", "#93C5FD"],
   estadual: ["#EF4444", "#F87171"],
   municipal: ["#F59E0B", "#FBBF24"],
 };
 
-// IVA teste: citizen-teal com glow
 const IVA_COLORS = ["#14B8A6", "#2DD4BF"];
-
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
 interface ChartSlice {
   name: string;
@@ -132,9 +128,7 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
       {/* Donut */}
       <div className="relative flex items-center justify-center">
         <PieChart width={260} height={260}>
-          {/* ---- Definicoes SVG: gradientes + filtros ---- */}
           <defs>
-            {/* Gradiente radial para cada fatia: inner=cor plena, outer=cor 55% */}
             {chartData.map((s) => (
               <radialGradient
                 key={s.gradientId}
@@ -168,7 +162,6 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
             </filter>
           </defs>
 
-          {/* Camada de glow IVA — renderizada abaixo, mais larga e blurred */}
           {ivaGlowData.length > 0 && (
             <Pie
               data={chartData}
@@ -192,7 +185,6 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
             </Pie>
           )}
 
-          {/* Donut principal com gradientes */}
           <Pie
             data={chartData}
             dataKey="value"
@@ -215,7 +207,6 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
           <RechartsTooltip content={<CustomTooltip />} cursor={false} />
         </PieChart>
 
-        {/* Centro do donut */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
           <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-white/25">
             Valor Real
@@ -229,7 +220,6 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
         </div>
       </div>
 
-      {/* Legenda de camadas — exibida apenas no modo hibrido */}
       {hasIva && (
         <div className="flex items-center gap-4 px-4">
           <div className="flex items-center gap-1.5">
@@ -241,8 +231,7 @@ export function BreakdownChart({ result }: { result: TaxCalculationResult }) {
           </div>
           <div className="h-3 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            {/* Indicador teal com glow CSS para o IVA */}
-            <span
+              <span
               className="h-[5px] w-5 rounded-full"
               style={{
                 background: "#14B8A6",

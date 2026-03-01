@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap,
@@ -17,25 +17,17 @@ import {
 } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import { useUtilityCalculator } from "@/hooks/use-utility-calculator";
+import { useEstados } from "@/hooks/use-estados";
 import { useAppContext } from "@/context/impact-context";
 import { computeSocialImpact } from "@/services/transparencia";
 import { UtilityStackedBar } from "@/components/charts/utility-stacked-bar";
 import type { SocialEquivalence, UtilityTaxResult } from "@/types/utility";
 
-// ============================================================
-// Formatacao
-// ============================================================
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
-
-const PCT = (v: number, d = 1) => `${(v * 100).toFixed(d)}%`;
+import { BRL, PCT } from "@/lib/utils";
 
 const NUM = (v: number) =>
   new Intl.NumberFormat("pt-BR").format(Math.floor(v));
 
-// ============================================================
-// Icones de equivalencia social
-// ============================================================
 const ICON_MAP = {
   merenda: BookOpen,
   consulta: Stethoscope,
@@ -51,17 +43,6 @@ const COLOR_MAP = {
   red: { text: "text-tax-red", bg: "bg-tax-red/10", dot: "bg-tax-red" },
 } as const;
 
-// ============================================================
-// Tooltip padrao
-// ============================================================
-const TOOLTIP_STYLE = {
-  background:
-    "oklch(0.187 0 0 / 97%) padding-box, linear-gradient(135deg, oklch(1 0 0 / 9%) 0%, oklch(1 0 0 / 0%) 100%) border-box",
-  border: "1px solid transparent",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-};
-
 function InfoTip({ text }: { text: string }) {
   return (
     <Tooltip.Root>
@@ -74,8 +55,7 @@ function InfoTip({ text }: { text: string }) {
         <Tooltip.Content
           side="top"
           sideOffset={8}
-          className="z-50 max-w-[260px] rounded-xl p-3 text-[11px] leading-relaxed text-white/70 shadow-2xl"
-          style={TOOLTIP_STYLE}
+          className="tooltip-glass z-50 max-w-[260px] rounded-xl p-3 text-[11px] leading-relaxed text-white/70 shadow-2xl"
         >
           {text}
           <Tooltip.Arrow className="fill-zinc-900/90" />
@@ -85,9 +65,6 @@ function InfoTip({ text }: { text: string }) {
   );
 }
 
-// ============================================================
-// Linha de imposto individual
-// ============================================================
 function TaxRow({
   label,
   rate,
@@ -125,9 +102,6 @@ function TaxRow({
   );
 }
 
-// ============================================================
-// Card de alerta — Imposto em Cascata
-// ============================================================
 function CascadeAlert({ result }: { result: UtilityTaxResult }) {
   const { cascade } = result;
   if (cascade.amount <= 0.01) return null;
@@ -163,9 +137,6 @@ function CascadeAlert({ result }: { result: UtilityTaxResult }) {
   );
 }
 
-// ============================================================
-// Nota do Regime 2026
-// ============================================================
 function HybridNote({ result }: { result: UtilityTaxResult }) {
   if (!result.isHybrid) return null;
 
@@ -181,9 +152,6 @@ function HybridNote({ result }: { result: UtilityTaxResult }) {
   );
 }
 
-// ============================================================
-// Painel do Rastro Social
-// ============================================================
 function SocialTrail({ monthlyTax }: { monthlyTax: number }) {
   const impact = computeSocialImpact(monthlyTax);
 
@@ -249,9 +217,6 @@ function EquivalenceCard({ eq }: { eq: SocialEquivalence }) {
   );
 }
 
-// ============================================================
-// Resultado do calculo
-// ============================================================
 function UtilityResult({ result }: { result: UtilityTaxResult }) {
   return (
     <motion.div
@@ -370,16 +335,16 @@ function UtilityResult({ result }: { result: UtilityTaxResult }) {
   );
 }
 
-// ============================================================
-// Componente principal — UtilityScanner
-// ============================================================
 export function UtilityScanner({ onResult }: { onResult?: (r: UtilityTaxResult) => void }) {
   const { utilityInputs, setUtilityInputs } = useAppContext();
   const { activeTab, inputMode, valueStr, regime } = utilityInputs;
+  const [uf, setUf] = useState("RO");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { result, error, isCalculating, calculate, simulateRegional, reset } =
     useUtilityCalculator();
+
+  const { estados } = useEstados();
 
   useEffect(() => {
     if (result) onResult?.(result);
@@ -405,10 +370,10 @@ export function UtilityScanner({ onResult }: { onResult?: (r: UtilityTaxResult) 
 
   function handleCalculate() {
     if (inputMode === "simulado") {
-      simulateRegional(activeTab, "RO", regime);
+      simulateRegional(activeTab, uf, regime);
     } else {
       const val = parseFloat(valueStr.replace(",", "."));
-      calculate({ type: activeTab, totalValue: val, inputMode: "manual", uf: "RO", regime });
+      calculate({ type: activeTab, totalValue: val, inputMode: "manual", uf, regime });
     }
   }
 
@@ -494,6 +459,25 @@ export function UtilityScanner({ onResult }: { onResult?: (r: UtilityTaxResult) 
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* UF — necessario para buscar ICMS real via IBPT */}
+          <div className="mb-4">
+            <label className="block text-[11px] text-white/35 mb-2">
+              Estado (UF) — ICMS consultado via IBPT em tempo real
+            </label>
+            <select
+              value={uf}
+              onChange={(e) => { setUf(e.target.value); reset(); }}
+              className="select-field font-mono text-[12px]"
+            >
+              {estados.length > 0
+                ? estados.map((e) => (
+                    <option key={e.sigla} value={e.sigla}>{e.sigla} — {e.nome}</option>
+                  ))
+                : <option value="RO">RO — Rondonia</option>
+              }
+            </select>
+          </div>
 
           {/* Regime */}
           <div className="mb-5">

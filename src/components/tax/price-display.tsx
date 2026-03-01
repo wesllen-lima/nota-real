@@ -1,9 +1,7 @@
 "use client";
 
 import type { TaxCalculationResult } from "@/types/tax";
-
-const BRL = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+import { BRL } from "@/lib/utils";
 
 const PCT = (v: number) =>
   new Intl.NumberFormat("pt-BR", {

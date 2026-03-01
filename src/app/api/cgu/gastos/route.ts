@@ -10,10 +10,10 @@ const CGU_BASE = "https://api.portaldatransparencia.gov.br/api-de-dados";
 const API_KEY = process.env.CGU_API_KEY ?? "";
 
 async function fetchFuncao(codigoFuncao: string): Promise<number> {
+  // pagina removido — restringir a pagina "1" destrói a soma macroeconômica total
   const params = new URLSearchParams({
     codigoFuncao,
     ano: "2026",
-    pagina: "1",
   });
 
   const res = await fetch(

@@ -15,9 +15,6 @@ import { LaborEffortCard } from "@/components/tax/labor-effort-card";
 import { ReformSlider } from "@/components/tax/reform-slider";
 import { IndignacaoCard } from "@/components/tax/indignacao-card";
 
-// ============================================================
-// Skeleton UI
-// ============================================================
 function CalculatorSkeleton() {
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6 select-none" aria-hidden="true">
@@ -97,9 +94,6 @@ function CalculatorSkeleton() {
   );
 }
 
-// ============================================================
-// Tabs
-// ============================================================
 type ConsumoMode = "calculadora" | "scanner";
 
 const TABS: Array<{ id: ConsumoMode; label: string; Icon: typeof Calculator }> = [
@@ -107,12 +101,9 @@ const TABS: Array<{ id: ConsumoMode; label: string; Icon: typeof Calculator }> =
   { id: "scanner", label: "Raio-X NF-e", Icon: ScanLine },
 ];
 
-// ============================================================
-// Componente principal
-// ============================================================
 export function ConsumoSection() {
   const [mode, setMode] = useState<ConsumoMode>("calculadora");
-  const { setTaxResult } = useAppContext();
+  const { setTaxResult, setNfeTaxAmount } = useAppContext();
 
   const {
     inputs,
@@ -144,7 +135,7 @@ export function ConsumoSection() {
             type="button"
             onClick={() => setMode(id)}
             className={clsx(
-              "flex items-center gap-2 rounded-xl px-4 py-2 text-[12px] font-medium transition-all duration-150",
+              "flex items-center gap-2 rounded-xl px-4 py-2 text-[12px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
               mode === id
                 ? "border border-gov-blue/30 bg-gov-blue/10 text-gov-blue"
                 : "border border-white/6 bg-white/3 text-white/35 hover:bg-white/6 hover:text-white/55"
@@ -168,7 +159,6 @@ export function ConsumoSection() {
             onUfChange={setUf}
           />
 
-          {/* Slider Antes/Depois — visivel apenas quando ha valor */}
           {isValid && resultAtual && result2026 && (
             <ReformSlider
               resultAtual={resultAtual}
@@ -203,7 +193,16 @@ export function ConsumoSection() {
         </>
       )}
 
-      {mode === "scanner" && <NfeScanner />}
+      {mode === "scanner" && (
+        <NfeScanner
+          onSuccess={(data) => {
+            const tax =
+              data.totais.vTotTrib ??
+              data.totais.vICMS + data.totais.vPIS + data.totais.vCOFINS + (data.totais.vIPI ?? 0);
+            setNfeTaxAmount(tax);
+          }}
+        />
+      )}
     </div>
   );
 }
